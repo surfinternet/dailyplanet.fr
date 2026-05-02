@@ -1,0 +1,79 @@
+{{- $title := .Title -}}
+{{- $desc  := .Description | default .Site.Params.description -}}
+{{- $imageURL := "" -}}
+{{- $url   := .Permalink -}}
+{{- $isArticle := and (eq .Section "posts") .IsPage -}}
+
+{{- if .Params.image -}}
+  {{- $imageURL = printf "%s%s" .Site.BaseURL (strings.TrimPrefix "/" .Params.image) -}}
+{{- end -}}
+
+{{- if .IsHome -}}
+  {{- $title = printf "%s — %s" .Site.Title .Site.Params.description -}}
+{{- else -}}
+  {{- $title = printf "%s — %s" .Title .Site.Title -}}
+{{- end -}}
+
+<title>{{ $title }}</title>
+<meta name="description" content="{{ $desc }}">
+<link rel="canonical" href="{{ $url }}">
+
+<!-- Open Graph -->
+<meta property="og:site_name" content="{{ .Site.Title }}">
+<meta property="og:title" content="{{ $title }}">
+<meta property="og:description" content="{{ $desc }}">
+<meta property="og:url" content="{{ $url }}">
+<meta property="og:locale" content="fr_FR">
+{{- if $isArticle }}
+<meta property="og:type" content="article">
+{{- if .Date }}<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{- end }}
+{{- if .Lastmod }}<meta property="article:modified_time" content="{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">{{- end }}
+{{- range .Params.tags }}<meta property="article:tag" content="{{ . }}">{{- end }}
+{{- else }}
+<meta property="og:type" content="website">
+{{- end }}
+{{- if $imageURL }}<meta property="og:image" content="{{ $imageURL }}">{{- end }}
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="{{ if $imageURL }}summary_large_image{{ else }}summary{{ end }}">
+<meta name="twitter:site" content="{{ .Site.Params.twitterHandle }}">
+<meta name="twitter:title" content="{{ $title }}">
+<meta name="twitter:description" content="{{ $desc }}">
+{{- if $imageURL }}<meta name="twitter:image" content="{{ $imageURL }}">{{- end }}
+
+<!-- Schema.org -->
+{{- if $isArticle -}}
+{{- $schema := dict
+  "@context" "https://schema.org"
+  "@type" "Article"
+  "headline" .Title
+  "description" $desc
+  "url" $url
+  "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
+  "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+  "author" (dict "@type" "Person" "name" (.Params.author | default .Site.Params.author))
+  "publisher" (dict "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL)
+-}}
+{{- if $imageURL -}}{{- $schema = merge $schema (dict "image" $imageURL) -}}{{- end -}}
+<script type="application/ld+json">{{ $schema | jsonify | safeJS }}</script>
+
+{{- $breadcrumb := dict
+  "@context" "https://schema.org"
+  "@type" "BreadcrumbList"
+  "itemListElement" (slice
+    (dict "@type" "ListItem" "position" 1 "name" "Accueil" "item" .Site.BaseURL)
+    (dict "@type" "ListItem" "position" 2 "name" (.CurrentSection.Title) "item" (.CurrentSection.Permalink))
+    (dict "@type" "ListItem" "position" 3 "name" .Title "item" $url)
+  )
+-}}
+<script type="application/ld+json">{{ $breadcrumb | jsonify | safeJS }}</script>
+{{- else -}}
+{{- $schema := dict
+  "@context" "https://schema.org"
+  "@type" "WebSite"
+  "name" .Site.Title
+  "url" .Site.BaseURL
+  "description" .Site.Params.description
+-}}
+<script type="application/ld+json">{{ $schema | jsonify | safeJS }}</script>
+{{- end -}}

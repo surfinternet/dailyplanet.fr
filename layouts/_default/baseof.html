@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "fr" }}">
+<head>
+{{ partial "head.html" . }}
+</head>
+<body>
+
+{{ block "page-extras" . }}{{ end }}
+
+{{ partial "masthead.html" . }}
+
+{{ block "main" . }}{{ end }}
+
+{{ partial "footer.html" . }}
+
+{{ block "page-scripts" . }}{{ end }}
+
+</body>
+</html>

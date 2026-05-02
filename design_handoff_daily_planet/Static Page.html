@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>À propos — Daily Planet FR</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+
+/* ─── STATIC PAGE ─── */
+
+.page-wrapper {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--col);
+}
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  padding: clamp(40px, 6vw, 80px) 0 clamp(32px, 4vw, 48px);
+  border-bottom: 2px solid var(--border);
+}
+.page-eyebrow {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.page-title {
+  font-family: var(--serif);
+  font-weight: 900;
+  font-size: clamp(36px, 6vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: var(--fg);
+  margin-bottom: 20px;
+}
+.page-subtitle {
+  font-size: clamp(16px, 1.8vw, 19px);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ─── RICH TEXT CONTENT ─── */
+.page-content {
+  padding: clamp(32px, 5vw, 56px) 0;
+}
+
+.page-content p {
+  font-size: clamp(16px, 1.8vw, 18px);
+  line-height: 1.8;
+  color: var(--fg);
+  margin-bottom: 1.6em;
+}
+.page-content h2 {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: clamp(22px, 2.8vw, 30px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 2.5em 0 0.8em;
+  color: var(--fg);
+  border-top: 2px solid var(--fg);
+  padding-top: 20px;
+}
+.page-content h3 {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg);
+  margin: 2em 0 0.6em;
+}
+.page-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.page-content a:hover { text-decoration: none; }
+.page-content blockquote {
+  border-left: 4px solid var(--accent);
+  margin: 2.5em 0;
+  padding: 12px 0 12px 24px;
+}
+.page-content blockquote p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(18px, 2.2vw, 22px);
+  margin-bottom: 0;
+  color: var(--fg);
+}
+
+/* ─── VALUES GRID ─── */
+.values-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 2em 0;
+}
+@media (min-width: 580px) {
+  .values-grid { grid-template-columns: 1fr 1fr; gap: 0 32px; }
+}
+.value-item {
+  padding: 20px 0;
+  border-top: 1.5px solid var(--border);
+}
+.value-num {
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.value-label {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.value-desc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ─── TEAM ROW ─── */
+.team-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 24px 0;
+  border-top: 1.5px solid var(--border);
+}
+.team-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cond);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--fg);
+  border: 2px solid var(--fg);
+  flex-shrink: 0;
+}
+.team-info { display: flex; flex-direction: column; gap: 3px; }
+.team-name {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.team-role {
+  font-family: var(--cond);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.team-bio {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* ─── CONTACT BOX ─── */
+.contact-box {
+  background: var(--fg);
+  color: var(--bg);
+  padding: 32px;
+  margin: 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.contact-box h3 {
+  font-family: var(--serif);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--bg);
+}
+.contact-box p {
+  font-size: 15px;
+  color: #AAA;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+.contact-box a {
+  display: inline-block;
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bg);
+  border: 1.5px solid var(--bg);
+  padding: 10px 20px;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.contact-box a:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ─── NAV SWITCHER (pour démo) ─── */
+.page-nav {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 0;
+  overflow-x: auto;
+}
+.page-nav-item {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 16px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  color: var(--muted);
+  transition: color 0.15s, border-color 0.15s;
+}
+.page-nav-item.active {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+.page-nav-item:hover { color: var(--fg); }
+
+.page-section { display: none; }
+.page-section.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <a href="Homepage.html" class="logo">Daily<span>●</span>Planet <sup>FR</sup></a>
+    <nav class="nav">
+      <a href="Homepage.html">Accueil</a>
+      <a href="#">Catégories</a>
+      <a href="Static Page.html">À propos</a>
+      <button class="nav-search" aria-label="Rechercher">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<div class="page-wrapper">
+
+  <!-- PAGE NAV (switcher entre les pages statiques) -->
+  <div class="page-nav">
+    <div class="page-nav-item active" onclick="switchPage('about')">À propos</div>
+    <div class="page-nav-item" onclick="switchPage('legal')">Mentions légales</div>
+    <div class="page-nav-item" onclick="switchPage('contact')">Contact</div>
+    <div class="page-nav-item" onclick="switchPage('charte')">Charte éditoriale</div>
+  </div>
+
+  <!-- ══ À PROPOS ══ -->
+  <div class="page-section active" id="page-about">
+    <header class="page-header">
+      <div class="page-eyebrow">Le média</div>
+      <h1 class="page-title">Un grand journal<br>pour une époque<br>qui ne dort pas.</h1>
+      <p class="page-subtitle">Daily Planet FR couvre l'intelligence artificielle et la tech avec le sérieux d'un quotidien de référence et le sens critique d'un média indépendant.</p>
+    </header>
+
+    <div class="page-content">
+
+      <p>Nous sommes en 2026. L'IA redessine les métiers, les équilibres de pouvoir, les façons de penser et de produire. Dans ce contexte, l'information tech n'est plus un luxe pour geeks — c'est une nécessité civique. Daily Planet FR est né de cette conviction.</p>
+
+      <p>Notre promesse est simple : vous donner les clés pour comprendre ce qui se passe vraiment, sans jargon inutile, sans langue de bois, sans publicité qui oriente notre ligne éditoriale. Nous écrivons pour des cadres, des entrepreneurs et des curieux qui ont 10 minutes entre deux réunions et veulent en ressortir plus informés qu'avant.</p>
+
+      <blockquote>
+        <p>L'information sur l'IA mérite le même traitement que la politique internationale. Rigoureuse, sourcée, sans fascination naïve.</p>
+      </blockquote>
+
+      <h2>Notre fonctionnement</h2>
+
+      <p>Daily Planet FR est un <strong>média hybride</strong> : nos articles sont rédigés par des systèmes IA spécialisés — formés sur des décennies d'archives de presse de qualité — puis relus, orientés et validés par une rédaction humaine. Ce n'est pas de l'automatisation à la chaîne ; c'est un nouveau mode de production journalistique que nous assumons pleinement et documentons en toute transparence.</p>
+
+      <p>Chaque article indique clairement son origine. Chaque fait sourcé est vérifié par un humain. Chaque opinion est signée. Nous pensons que cette transparence n'est pas une faiblesse — c'est notre différenciation.</p>
+
+      <h2>Ce en quoi nous croyons</h2>
+
+      <div class="values-grid">
+        <div class="value-item">
+          <div class="value-num">01</div>
+          <div class="value-label">L'information sourcée</div>
+          <div class="value-desc">Aucun article sans source vérifiable. Nous citons nos références, nous linquons vers les études, nous montrons notre travail.</div>
+        </div>
+        <div class="value-item">
+          <div class="value-num">02</div>
+          <div class="value-label">L'indépendance radicale</div>
+          <div class="value-desc">Zéro publicité native, zéro contenu sponsorisé non signalé. Nos revenus viennent de nos lecteurs.</div>
+        </div>
+        <div class="value-item">
+          <div class="value-num">03</div>
+          <div class="value-label">Le sens critique</div>
+          <div class="value-desc">Nous couvrons l'IA avec enthousiasme et cynisme à parts égales. L'hype n'est pas de l'information.</div>
+        </div>
+        <div class="value-item">
+          <div class="value-num">04</div>
+          <div class="value-label">La transparence éditoriale</div>
+          <div class="value-desc">Nous documentons nos méthodes, nos outils, nos erreurs. La confiance se gagne, elle ne se décrète pas.</div>
+        </div>
+      </div>
+
+      <h2>La rédaction</h2>
+
+      <div class="team-row">
+        <div class="team-avatar">LM</div>
+        <div class="team-info">
+          <div class="team-name">Léa Marchand</div>
+          <div class="team-role">Rédactrice en chef</div>
+          <p class="team-bio">Ancienne journaliste tech au Monde et à Wired France. Elle oriente la ligne éditoriale et valide tous les contenus sensibles.</p>
+        </div>
+      </div>
+
+      <div class="team-row">
+        <div class="team-avatar">JR</div>
+        <div class="team-info">
+          <div class="team-name">J.A.R.V.I.S. Reporter</div>
+          <div class="team-role">Correspondant IA &amp; Sécurité — Système IA</div>
+          <p class="team-bio">Formé sur 40 ans d'archives de presse spécialisée. Produit les premiers jets et les analyses de données. Relu systématiquement par Léa.</p>
+        </div>
+      </div>
+
+      <div class="team-row">
+        <div class="team-avatar">AK</div>
+        <div class="team-info">
+          <div class="team-name">Adrien Kone</div>
+          <div class="team-role">Développeur &amp; éditeur technique</div>
+          <p class="team-bio">Gère l'infrastructure Hugo, les outils de production IA et l'intégration des sources de données en temps réel.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ MENTIONS LÉGALES ══ -->
+  <div class="page-section" id="page-legal">
+    <header class="page-header">
+      <div class="page-eyebrow">Légal</div>
+      <h1 class="page-title">Mentions légales</h1>
+      <p class="page-subtitle">Informations légales conformément à la loi pour la confiance dans l'économie numérique (LCEN).</p>
+    </header>
+    <div class="page-content">
+      <h2>Éditeur</h2>
+      <p><strong>Daily Planet FR</strong> est édité par [Raison sociale à compléter], [forme juridique], au capital de [montant] €, immatriculée au RCS de [ville] sous le numéro [SIRET]. Siège social : [adresse complète].</p>
+      <p>Directeur de la publication : [Nom du directeur de publication].<br>Contact : <a href="mailto:contact@dailyplanet.fr">contact@dailyplanet.fr</a></p>
+
+      <h2>Hébergement</h2>
+      <p>Ce site est hébergé par [Hébergeur], [adresse]. Le site est généré statiquement via Hugo et servi via un CDN.</p>
+
+      <h2>Propriété intellectuelle</h2>
+      <p>L'ensemble des contenus publiés sur dailyplanet.fr (textes, illustrations, images générées par IA) sont la propriété de Daily Planet FR ou de leurs auteurs respectifs, sauf mention contraire. Toute reproduction sans autorisation est interdite.</p>
+
+      <h3>Contenu généré par IA</h3>
+      <p>Une partie des contenus publiés sur ce site est produite à l'aide de systèmes d'intelligence artificielle, dans le cadre d'un processus éditorial hybride. Ces contenus sont systématiquement relus et validés par la rédaction humaine. Chaque article indique clairement son mode de production.</p>
+
+      <h2>Données personnelles</h2>
+      <p>Daily Planet FR collecte uniquement les données nécessaires à la gestion de la newsletter (adresse email). Ces données ne sont pas revendues à des tiers. Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour exercer ce droit : <a href="mailto:privacy@dailyplanet.fr">privacy@dailyplanet.fr</a></p>
+
+      <h2>Cookies</h2>
+      <p>Ce site n'utilise pas de cookies publicitaires. Des cookies techniques strictement nécessaires au fonctionnement du site peuvent être déposés. Aucun cookie de suivi comportemental n'est utilisé.</p>
+    </div>
+  </div>
+
+  <!-- ══ CONTACT ══ -->
+  <div class="page-section" id="page-contact">
+    <header class="page-header">
+      <div class="page-eyebrow">Nous écrire</div>
+      <h1 class="page-title">Contact</h1>
+      <p class="page-subtitle">Une information à signaler, un partenariat, une correction à demander ? On lit tout.</p>
+    </header>
+    <div class="page-content">
+      <div class="contact-box">
+        <h3>Rédaction</h3>
+        <p>Pour les signalements d'erreurs, suggestions d'articles ou questions éditoriales.</p>
+        <a href="mailto:redaction@dailyplanet.fr">redaction@dailyplanet.fr</a>
+      </div>
+
+      <div class="contact-box">
+        <h3>Presse &amp; partenariats</h3>
+        <p>Pour les demandes d'interview, les partenariats éditoriaux et les syndications de contenu.</p>
+        <a href="mailto:partenariats@dailyplanet.fr">partenariats@dailyplanet.fr</a>
+      </div>
+
+      <h2>Politique de correction</h2>
+      <p>Nous nous engageons à corriger toute erreur factuelle signalée dans les 24 heures. Les corrections sont indiquées en bas d'article avec la date et la nature de la modification. Nous ne supprimons pas les articles — nous les corrigeons de façon transparente.</p>
+
+      <h2>Signalement</h2>
+      <p>Si vous estimez qu'un article viole des règles déontologiques ou contient une information gravement erronée, écrivez à <a href="mailto:redaction@dailyplanet.fr">redaction@dailyplanet.fr</a> avec le lien de l'article concerné et la nature du problème. Nous répondons sous 48h.</p>
+    </div>
+  </div>
+
+  <!-- ══ CHARTE ══ -->
+  <div class="page-section" id="page-charte">
+    <header class="page-header">
+      <div class="page-eyebrow">Éditoriale</div>
+      <h1 class="page-title">Charte éditoriale</h1>
+      <p class="page-subtitle">Ce que nous publions, comment nous le produisons, et ce que nous refusons.</p>
+    </header>
+    <div class="page-content">
+      <p>Daily Planet FR est un média tech francophone indépendant. Notre couverture porte sur l'intelligence artificielle, les modèles de langage, la politique technologique, l'impact du numérique sur le travail et la société.</p>
+
+      <h2>Ce que nous couvrons</h2>
+      <p>Nous privilégions l'analyse de fond à l'actualité chaude. Quand nous couvrons l'actualité, c'est pour la contextualiser, pas pour la répéter. Notre valeur ajoutée est dans la mise en perspective, pas dans la rapidité.</p>
+
+      <h2>Notre rapport à l'IA</h2>
+      <p>Nous utilisons des systèmes IA pour produire des articles. Nous en parlons sans honte ni fascination excessive. Nous croyons que l'IA est un outil, pas une révélation — et qu'un média tech qui n'expérimente pas ses propres outils manque de cohérence.</p>
+
+      <blockquote>
+        <p>Rédigé par des IA, relu par des humains curieux. C'est notre modèle. On l'assume.</p>
+      </blockquote>
+
+      <h2>Ce que nous refusons</h2>
+      <p>Nous ne publions pas de contenu publicitaire non signalé. Nous ne couvrons pas les annonces de levées de fonds comme des succès garantis. Nous ne reproduisons pas les communiqués de presse sans les remettre en question. Nous ne sacrifions pas la précision à la vitesse.</p>
+
+      <h2>Sources et vérification</h2>
+      <p>Tout fait cité dans nos articles est sourcé. Nous linquons vers les études originales, les rapports primaires, les déclarations officielles. Quand une information ne peut être vérifiée de façon indépendante, nous le signalons explicitement.</p>
+    </div>
+  </div>
+
+</div><!-- /page-wrapper -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">Daily<span>●</span>Planet <sup style="font-size:0.45em;color:var(--accent)">FR</sup></div>
+      <p class="footer-tagline">L'IA et la tech qui comptent,<br>sans la langue de bois.</p>
+    </div>
+    <div class="footer-links">
+      <a href="Static Page.html">À propos</a>
+      <a href="Static Page.html">Mentions légales</a>
+      <a href="Static Page.html">Contact</a>
+      <a href="#">Charte éditoriale</a>
+    </div>
+    <div class="footer-social">
+      <a href="#">Twitter / X</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">RSS</a>
+      <a href="#">Newsletter</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Daily Planet FR — dailyplanet.fr</p>
+    <p><em>Rédigé par des IA, relu et validé par des humains curieux.</em></p>
+  </div>
+</footer>
+
+<script>
+function switchPage(id) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.page-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

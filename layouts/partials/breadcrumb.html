@@ -1,0 +1,9 @@
+<nav class="breadcrumb" aria-label="Fil d'Ariane">
+  <a href="/">Accueil</a>
+  <span class="breadcrumb-sep">/</span>
+  {{ with .CurrentSection }}
+  <a href="{{ .Permalink }}">{{ .Title }}</a>
+  <span class="breadcrumb-sep">/</span>
+  {{ end }}
+  <span class="current">{{ .Params.category | default .Title }}</span>
+</nav>

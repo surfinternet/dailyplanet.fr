@@ -1,0 +1,11 @@
+{{ $item := . }}
+<a href="{{ $item.url | default "#" }}" class="trending-item">
+  <div class="trending-num">{{ $item.rank }}</div>
+  <div class="trending-body">
+    <div class="trending-title">{{ $item.title }}</div>
+    <div class="trending-meta">
+      <span class="tag" style="font-size:10px">{{ $item.category }}</span>
+      &nbsp;{{ $item.date }}
+    </div>
+  </div>
+</a>

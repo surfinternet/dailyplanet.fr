@@ -1,0 +1,8 @@
+<div class="author-box">
+  <div class="author-avatar">{{ .Params.author_initials | default "DP" }}</div>
+  <div class="author-info">
+    <div class="author-name">{{ .Params.author | default .Site.Params.author }}</div>
+    {{ with .Params.author_role }}<div class="author-role">{{ . }}</div>{{ end }}
+    {{ with .Params.author_bio }}<p class="author-bio">{{ . }}</p>{{ end }}
+  </div>
+</div>

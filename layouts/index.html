@@ -1,0 +1,78 @@
+{{ define "page-extras" }}
+{{ partial "datebar.html" . }}
+{{ end }}
+
+{{ define "main" }}
+{{- $allPosts := where .Site.RegularPages "Section" "posts" }}
+{{- $hero := where $allPosts "Params.featured" true | first 1 }}
+{{- $others := where $allPosts "Params.featured" "ne" true | first 6 }}
+{{- $cardLarge := first 1 $others }}
+{{- $cards := after 1 $others }}
+
+{{- with index $hero 0 }}
+<section class="hero">
+  <div class="hero-inner">
+    <a href="{{ .Permalink }}" class="hero-image">
+      {{- if .Params.image }}
+        {{- $img := resources.Get .Params.image }}
+        {{- if $img }}
+          {{- $webp := $img.Resize "1200x675 WebP" }}
+          <img src="{{ $webp.RelPermalink }}" alt="{{ .Title }}" width="1200" height="675" loading="eager" fetchpriority="high">
+        {{- else }}
+          <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 21:9 ou 16:9</div>
+        {{- end }}
+      {{- else }}
+        <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 21:9 ou 16:9</div>
+      {{- end }}
+    </a>
+    <div class="hero-content">
+      <div class="hero-tag"><span class="tag filled">{{ .Params.category }}</span></div>
+      <h1 class="hero-title"><a href="{{ .Permalink }}">{{ .Title }}</a></h1>
+      <p class="hero-chapo">{{ .Description | default (.Summary | plainify | truncate 200) }}</p>
+      <div class="hero-meta">
+        <span>Par <strong>{{ .Params.author }}</strong></span>
+        <span class="separator">—</span>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date | time.Format "2 January 2006" }}</time>
+        <span class="separator">—</span>
+        <span>{{ .Params.readtime }} min de lecture</span>
+      </div>
+    </div>
+  </div>
+</section>
+{{- end }}
+
+<main class="main-content">
+
+  <section>
+    <div class="section-header">
+      <span class="section-title">Derniers articles</span>
+      <a href="/posts/" class="section-more">Voir tout →</a>
+    </div>
+
+    <div class="article-grid">
+
+      {{- with index $cardLarge 0 }}
+      {{ partial "article-card-large.html" . }}
+      {{- end }}
+
+      {{- range $cards }}
+      {{ partial "article-card.html" . }}
+      {{- end }}
+
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <div class="section-header">
+      <span class="section-title">Les plus lus</span>
+    </div>
+    {{- range .Site.Data.trending }}
+    {{ partial "trending-item.html" . }}
+    {{- end }}
+  </aside>
+
+</main>
+
+{{ partial "newsletter.html" . }}
+
+{{ end }}

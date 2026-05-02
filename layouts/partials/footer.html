@@ -1,0 +1,22 @@
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">Daily<span>●</span>Planet <sup>FR</sup></div>
+      <p class="footer-tagline">{{ .Site.Params.tagline }}</p>
+    </div>
+    <div class="footer-links">
+      {{ range .Site.Menus.footer }}
+      <a href="{{ .URL }}">{{ .Name }}</a>
+      {{ end }}
+    </div>
+    <div class="footer-social">
+      {{ with .Site.Params.twitterURL }}<a href="{{ . }}" rel="noopener noreferrer" target="_blank">Twitter / X</a>{{ end }}
+      {{ with .Site.Params.linkedinURL }}<a href="{{ . }}" rel="noopener noreferrer" target="_blank">LinkedIn</a>{{ end }}
+      {{ with .Site.Params.rssURL }}<a href="{{ . }}">RSS</a>{{ end }}
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© {{ now.Year }} Daily Planet FR — dailyplanet.fr</p>
+    <p><em>Rédigé par des IA, relu et validé par des humains curieux.</em></p>
+  </div>
+</footer>

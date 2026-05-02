@@ -1,0 +1,33 @@
+{{ define "main" }}
+<div class="list-wrapper">
+
+  <header class="list-header">
+    <h1 class="list-title">{{ .Title }}</h1>
+  </header>
+
+  <div class="list-grid">
+    {{- range .Paginator.Pages }}
+    {{ partial "article-card.html" . }}
+    {{- end }}
+  </div>
+
+  {{- if gt .Paginator.TotalPages 1 }}
+  <nav class="pagination" aria-label="Pagination">
+    {{- if .Paginator.HasPrev }}
+    <a href="{{ .Paginator.Prev.URL }}">← Précédent</a>
+    {{- end }}
+    {{- range .Paginator.Pagers }}
+    {{- if eq . $.Paginator }}
+    <span class="current">{{ .PageNumber }}</span>
+    {{- else }}
+    <a href="{{ .URL }}">{{ .PageNumber }}</a>
+    {{- end }}
+    {{- end }}
+    {{- if .Paginator.HasNext }}
+    <a href="{{ .Paginator.Next.URL }}">Suivant →</a>
+    {{- end }}
+  </nav>
+  {{- end }}
+
+</div>
+{{ end }}

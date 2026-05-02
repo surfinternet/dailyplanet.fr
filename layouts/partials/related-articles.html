@@ -1,0 +1,31 @@
+{{- $related := .Site.RegularPages.Related . | first 3 }}
+{{- if $related }}
+<section class="related">
+  <div class="section-header">
+    <span class="section-title">Articles connexes</span>
+    <a href="/posts/" class="section-more">Voir tout →</a>
+  </div>
+  <div class="related-grid">
+    {{- range $related }}
+    <a href="{{ .Permalink }}" class="related-card">
+      <div class="related-image">
+        {{- if .Params.image }}
+          {{- $img := resources.Get .Params.image }}
+          {{- if $img }}
+            {{- $webp := $img.Resize "600x338 WebP" }}
+            <img src="{{ $webp.RelPermalink }}" alt="{{ .Title }}" width="600" height="338" loading="lazy">
+          {{- else }}
+            <div class="img-placeholder" style="height:160px;font-size:11px">illustration comics</div>
+          {{- end }}
+        {{- else }}
+          <div class="img-placeholder" style="height:160px;font-size:11px">illustration comics</div>
+        {{- end }}
+      </div>
+      <span class="tag" style="font-size:10px">{{ .Params.category }}</span>
+      <div class="related-title">{{ .Title }}</div>
+      <div class="related-meta">{{ .Date | time.Format "2 January 2006" }} · {{ .Params.readtime }} min</div>
+    </a>
+    {{- end }}
+  </div>
+</section>
+{{- end }}

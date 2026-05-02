@@ -1,0 +1,26 @@
+{{ $page := . }}
+<article class="article-card card-large">
+  <a href="{{ $page.Permalink }}">
+    <div class="card-image">
+      {{- if $page.Params.image }}
+        {{- $img := resources.Get $page.Params.image }}
+        {{- if $img }}
+          {{- $webp := $img.Resize "800x600 WebP" }}
+          <img src="{{ $webp.RelPermalink }}" alt="{{ $page.Title }}" width="800" height="600" loading="lazy">
+        {{- else }}
+          <div class="img-placeholder" style="height:100%;min-height:240px">illustration article<br>4:3 comics style</div>
+        {{- end }}
+      {{- else }}
+        <div class="img-placeholder" style="height:100%;min-height:240px">illustration article<br>4:3 comics style</div>
+      {{- end }}
+    </div>
+  </a>
+  <div class="card-body">
+    <div class="card-tag"><span class="tag">{{ $page.Params.category }}</span></div>
+    <h2 class="card-title">
+      <a href="{{ $page.Permalink }}">{{ $page.Title }}</a>
+    </h2>
+    <p class="card-chapo">{{ $page.Description | default ($page.Summary | plainify | truncate 180) }}</p>
+    <div class="card-meta">{{ $page.Date | time.Format "2 January 2006" }} · {{ $page.Params.readtime }} min</div>
+  </div>
+</article>

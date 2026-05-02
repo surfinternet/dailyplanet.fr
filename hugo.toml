@@ -1,0 +1,81 @@
+baseURL = "https://dailyplanet.fr/"
+languageCode = "fr-FR"
+title = "Daily Planet FR"
+paginate = 10
+enableRobotsTXT = true
+enableEmoji = false
+defaultContentLanguage = "fr"
+
+[params]
+  description   = "L'IA et la tech qui comptent, sans la langue de bois."
+  tagline       = "L'IA et la tech qui comptent, sans la langue de bois."
+  author        = "Rédaction Daily Planet FR"
+  twitterHandle = "@DailyPlanetFR"
+  twitterURL    = "https://twitter.com/DailyPlanetFR"
+  linkedinURL   = "https://linkedin.com/company/dailyplanetfr"
+  rssURL        = "/index.xml"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel   = 3
+    ordered    = false
+  [markup.highlight]
+    noClasses = false
+
+[outputs]
+  home    = ["HTML", "RSS"]
+  section = ["HTML", "RSS"]
+  page    = ["HTML"]
+
+[minify]
+  minifyOutput = true
+
+[imaging]
+  quality = 85
+  resampleFilter = "Lanczos"
+  [imaging.exif]
+    disableDate     = false
+    disableLatLong  = true
+
+[menu]
+  [[menu.main]]
+    name   = "Actualités"
+    url    = "/posts/"
+    weight = 1
+  [[menu.main]]
+    name   = "IA"
+    url    = "/categories/intelligence-artificielle/"
+    weight = 2
+  [[menu.main]]
+    name   = "Tech"
+    url    = "/categories/tech/"
+    weight = 3
+  [[menu.main]]
+    name   = "Politique"
+    url    = "/categories/politique/"
+    weight = 4
+  [[menu.main]]
+    name   = "Société"
+    url    = "/categories/societe/"
+    weight = 5
+
+  [[menu.footer]]
+    name   = "À propos"
+    url    = "/about/"
+    weight = 1
+  [[menu.footer]]
+    name   = "Mentions légales"
+    url    = "/legal/"
+    weight = 2
+  [[menu.footer]]
+    name   = "Contact"
+    url    = "/contact/"
+    weight = 3
+  [[menu.footer]]
+    name   = "Charte éditoriale"
+    url    = "/charter/"
+    weight = 4

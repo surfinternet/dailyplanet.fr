@@ -1,0 +1,120 @@
+{{ define "page-extras" }}
+<div class="reading-progress" id="progress"></div>
+{{ end }}
+
+{{ define "main" }}
+<div class="article-wrapper">
+  {{ partial "breadcrumb.html" . }}
+
+  <header class="article-header">
+    <div class="article-category">
+      <span class="tag filled">{{ .Params.category }}</span>
+      {{- range first 2 .Params.tags }}
+      <span class="tag">{{ . }}</span>
+      {{- end }}
+    </div>
+
+    <h1 class="article-title">{{ .Title }}</h1>
+
+    {{ with .Params.description }}
+    <p class="article-chapo">{{ . }}</p>
+    {{ end }}
+
+    <div class="article-meta">
+      <span>Par <strong>{{ .Params.author | default .Site.Params.author }}</strong></span>
+      <span class="meta-dot">·</span>
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date | time.Format "2 January 2006" }}</time>
+      <span class="meta-dot">·</span>
+      <span>{{ .Params.readtime }} min de lecture</span>
+    </div>
+
+    <div class="share-row">
+      <button class="share-btn primary" onclick="navigator.share ? navigator.share({title: document.title, url: location.href}) : navigator.clipboard.writeText(location.href)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        Partager
+      </button>
+      <a href="https://twitter.com/intent/tweet?text={{ .Title | urlquery }}&url={{ .Permalink | urlquery }}" target="_blank" rel="noopener noreferrer" class="share-btn">Twitter</a>
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ .Permalink | urlquery }}" target="_blank" rel="noopener noreferrer" class="share-btn">LinkedIn</a>
+      <button class="share-btn" onclick="navigator.clipboard.writeText(location.href)">Copier le lien</button>
+    </div>
+  </header>
+</div>
+
+<div style="max-width:var(--max);margin:0 auto;padding:0 var(--col)">
+  <div class="article-hero-image">
+    {{- if .Params.image }}
+      {{- $img := resources.Get .Params.image }}
+      {{- if $img }}
+        {{- $webp := $img.Resize "1200x571 WebP" }}
+        <img src="{{ $webp.RelPermalink }}" alt="{{ .Title }}" width="1200" height="571" loading="eager" fetchpriority="high">
+      {{- else }}
+        <div class="img-placeholder" style="height:100%;min-height:280px;font-size:13px">IMAGE À LA UNE — illustration comics style éditorial premium</div>
+      {{- end }}
+    {{- else }}
+      <div class="img-placeholder" style="height:100%;min-height:280px;font-size:13px">IMAGE À LA UNE — illustration comics style éditorial premium</div>
+    {{- end }}
+  </div>
+  {{ with .Params.image_caption }}
+  <div class="article-wrapper">
+    <p class="image-caption">{{ . }}</p>
+  </div>
+  {{ end }}
+</div>
+
+<div class="article-wrapper">
+  <div class="article-layout">
+
+    <article class="article-body">
+      {{ .Content }}
+    </article>
+
+    <aside class="article-sidebar">
+      {{- if .Params.tags }}
+      <div class="sidebar-block">
+        <div class="sidebar-label">Sur ce sujet</div>
+        <div class="sidebar-tags">
+          {{- range .Params.tags }}
+          <span class="tag">{{ . }}</span>
+          {{- end }}
+        </div>
+      </div>
+      {{- end }}
+
+      {{- $related := .Site.RegularPages.Related . | first 3 }}
+      {{- if $related }}
+      <div class="sidebar-block">
+        <div class="sidebar-label">À lire aussi</div>
+        <div>
+          {{- range $related }}
+          <a href="{{ .Permalink }}" class="sidebar-related-item">
+            <span class="tag" style="font-size:10px">{{ .Params.category }}</span>
+            <span class="sidebar-related-title">{{ .Title }}</span>
+          </a>
+          {{- end }}
+        </div>
+      </div>
+      {{- end }}
+    </aside>
+
+  </div>
+
+  {{ partial "author-box.html" . }}
+
+  <div class="share-bottom">
+    <span class="share-bottom-label">Partager cet article</span>
+    <a href="https://twitter.com/intent/tweet?text={{ .Title | urlquery }}&url={{ .Permalink | urlquery }}" target="_blank" rel="noopener noreferrer" class="share-btn primary">Twitter</a>
+    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ .Permalink | urlquery }}" target="_blank" rel="noopener noreferrer" class="share-btn">LinkedIn</a>
+    <button class="share-btn" onclick="navigator.clipboard.writeText(location.href)">Copier le lien</button>
+  </div>
+
+  {{ partial "related-articles.html" . }}
+</div>
+
+{{ partial "newsletter.html" . }}
+
+{{ end }}
+
+{{ define "page-scripts" }}
+{{- $js := resources.Get "js/progress.js" | minify | fingerprint }}
+<script src="{{ $js.RelPermalink }}" defer integrity="{{ $js.Data.Integrity }}"></script>
+{{ end }}
