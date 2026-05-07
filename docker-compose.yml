@@ -4,10 +4,10 @@ services:
     container_name: dailyplanet-pipeline
     restart: unless-stopped
     volumes:
-      # Repo complet monté en live — inclut .git pour que le container puisse faire git push
+      # Repo complet en live — inclut .git pour que le container puisse faire git push
       - /home/dailyplanet/dailyplanet.fr:/app
-      # Clés SSH pour authentification GitHub (lecture seule)
-      - /home/dailyplanet/.ssh:/root/.ssh:ro
+      # Clés SSH montées sur /host-ssh (lu par entrypoint, copié dans /root/.ssh avec bons droits)
+      - /home/dailyplanet/.ssh:/host-ssh:ro
     env_file:
       - /home/dailyplanet/dailyplanet.fr/.env
     environment:
