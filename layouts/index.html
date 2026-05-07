@@ -80,7 +80,7 @@
     <div class="section-header">
       <span class="section-title">Les plus lus</span>
     </div>
-    {{- range .Site.Data.trending }}
+    {{- range hugo.Data.trending }}
     {{ partial "trending-item.html" . }}
     {{- end }}
   </aside>

@@ -1,5 +1,5 @@
 baseURL = "https://dailyplanet.fr/"
-languageCode = "fr-FR"
+locale = "fr-FR"
 title = "Daily Planet FR"
 paginate = 10
 enableRobotsTXT = true
