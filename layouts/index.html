@@ -13,11 +13,7 @@
   <div class="hero-inner">
     <a href="{{ .RelPermalink }}" class="hero-image">
       {{- $alt := .Params.image_alt | default .Params.image_caption | default .Title }}
-      {{- if .Params.image_display }}
-        <img src="{{ .Params.image_display }}" alt="{{ $alt }}"
-             width="{{ .Params.image_width }}" height="{{ .Params.image_height }}"
-             loading="eager" fetchpriority="high">
-      {{- else if .Params.image }}
+      {{- if .Params.image }}
         {{- $img := resources.Get .Params.image }}
         {{- if $img }}
           {{- $sm := $img.Resize "480x webp" }}
@@ -30,9 +26,17 @@
                  width="{{ $lg.Width }}" height="{{ $lg.Height }}"
                  loading="eager" fetchpriority="high">
           </picture>
+        {{- else if .Params.image_display }}
+          <img src="{{ .Params.image_display }}" alt="{{ $alt }}"
+               width="{{ .Params.image_width }}" height="{{ .Params.image_height }}"
+               loading="eager" fetchpriority="high">
         {{- else }}
           <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 16:9</div>
         {{- end }}
+      {{- else if .Params.image_display }}
+        <img src="{{ .Params.image_display }}" alt="{{ $alt }}"
+             width="{{ .Params.image_width }}" height="{{ .Params.image_height }}"
+             loading="eager" fetchpriority="high">
       {{- else }}
         <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 16:9</div>
       {{- end }}
