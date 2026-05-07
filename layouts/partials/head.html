@@ -1,16 +1,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-display-normal.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-display-italic.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans.woff2" crossorigin>
 {{- if and (eq .Kind "page") (eq .Type "posts") }}
-  {{- if .Params.image_display }}
-<link rel="preload" as="image" href="{{ .Params.image_display }}">
-  {{- else if .Params.image }}
+  {{- if .Params.image }}
     {{- $img := resources.Get .Params.image }}
     {{- if $img }}
+      {{- $sm := $img.Resize "480x webp" }}
       {{- $md := $img.Resize "800x webp" }}
-<link rel="preload" as="image" href="{{ $md.RelPermalink }}" type="image/webp">
+      {{- $lg := $img.Resize "1200x webp" }}
+<link rel="preload" as="image" imagesrcset="{{ $sm.RelPermalink }} 480w, {{ $md.RelPermalink }} 800w, {{ $lg.RelPermalink }} 1200w" imagesizes="100vw">
     {{- end }}
+  {{- else if .Params.image_display }}
+<link rel="preload" as="image" href="{{ .Params.image_display }}">
   {{- end }}
 {{- end }}
 {{ partial "seo.html" . }}
