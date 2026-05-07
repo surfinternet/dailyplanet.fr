@@ -1,6 +1,6 @@
 baseURL = "https://dailyplanet.fr/"
 locale = "fr-FR"
-title = "Daily Planet FR"
+title = "Daily Planet"
 paginate = 10
 enableRobotsTXT = true
 enableEmoji = false
@@ -9,9 +9,9 @@ defaultContentLanguage = "fr"
 [params]
   description   = "L'IA et la tech qui comptent, sans la langue de bois."
   tagline       = "L'IA et la tech qui comptent, sans la langue de bois."
-  author        = "Rédaction Daily Planet FR"
+  author        = "Rédaction Daily Planet"
   twitterHandle = "@DailyPlanetFR"
-  twitterURL    = "https://twitter.com/DailyPlanetFR"
+  twitterURL    = "https://x.com/DailyPlanetFR"
   linkedinURL   = "https://linkedin.com/company/dailyplanetfr"
   rssURL        = "/index.xml"
 
@@ -49,22 +49,6 @@ defaultContentLanguage = "fr"
     name   = "Actualités"
     url    = "/posts/"
     weight = 1
-  [[menu.main]]
-    name   = "IA"
-    url    = "/categories/intelligence-artificielle/"
-    weight = 2
-  [[menu.main]]
-    name   = "Tech"
-    url    = "/categories/tech/"
-    weight = 3
-  [[menu.main]]
-    name   = "Politique"
-    url    = "/categories/politique/"
-    weight = 4
-  [[menu.main]]
-    name   = "Société"
-    url    = "/categories/societe/"
-    weight = 5
 
   [[menu.footer]]
     name   = "À propos"
@@ -72,13 +56,10 @@ defaultContentLanguage = "fr"
     weight = 1
   [[menu.footer]]
     name   = "Mentions légales"
-    url    = "/legal/"
+    url    = "/mentions-legales/"
     weight = 2
   [[menu.footer]]
     name   = "Contact"
     url    = "/contact/"
     weight = 3
-  [[menu.footer]]
-    name   = "Charte éditoriale"
-    url    = "/charter/"
-    weight = 4
+
