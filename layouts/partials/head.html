@@ -17,6 +17,6 @@
   {{- end }}
 {{- end }}
 {{ partial "seo.html" . }}
-{{ $css := resources.Get "css/main.css" | minify | fingerprint }}
-<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">
+{{- $css := resources.Get "css/main.css" | minify -}}
+<style>{{- $css.Content | safeCSS -}}</style>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">

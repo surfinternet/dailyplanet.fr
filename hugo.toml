@@ -38,7 +38,7 @@ defaultContentLanguage = "fr"
   minifyOutput = true
 
 [imaging]
-  quality = 85
+  quality = 75
   resampleFilter = "Lanczos"
   [imaging.exif]
     disableDate     = false
