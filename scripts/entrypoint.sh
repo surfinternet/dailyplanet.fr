@@ -9,10 +9,8 @@ git config --global user.name  "${GIT_USER_NAME:-Daily Planet Bot}"
 git config --global user.email "${GIT_USER_EMAIL:-bot@dailyplanet.fr}"
 git config --global --add safe.directory /app
 
-# Pre-accept GitHub host key (avoids interactive prompt in cron)
-mkdir -p /root/.ssh
-ssh-keyscan -H github.com >> /root/.ssh/known_hosts 2>/dev/null
-echo "[entrypoint] GitHub host key configuré"
+# GitHub host key already in known_hosts via volume mount (read-only)
+echo "[entrypoint] SSH config montée depuis le host"
 
 # Init SQLite DB on first run
 if [ ! -f /app/pipeline/db/dailyplanet.db ]; then
