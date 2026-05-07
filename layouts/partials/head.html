@@ -15,6 +15,22 @@
 <link rel="preload" as="image" href="{{ .Params.image_display }}">
   {{- end }}
 {{- end }}
+{{- if eq .Kind "home" }}
+  {{- $hero := index (where .Site.RegularPages "Section" "posts") 0 }}
+  {{- if $hero }}
+    {{- if $hero.Params.image }}
+      {{- $img := resources.Get $hero.Params.image }}
+      {{- if $img }}
+        {{- $sm := $img.Resize "480x webp" }}
+        {{- $md := $img.Resize "800x webp" }}
+        {{- $lg := $img.Resize "1200x webp" }}
+<link rel="preload" as="image" imagesrcset="{{ $sm.RelPermalink }} 480w, {{ $md.RelPermalink }} 800w, {{ $lg.RelPermalink }} 1200w" imagesizes="100vw">
+      {{- end }}
+    {{- else if $hero.Params.image_display }}
+<link rel="preload" as="image" href="{{ $hero.Params.image_display }}">
+    {{- end }}
+  {{- end }}
+{{- end }}
 {{ partial "seo.html" . }}
 {{- $css := resources.Get "css/main.css" | minify -}}
 <style>{{- $css.Content | safeCSS -}}</style>
