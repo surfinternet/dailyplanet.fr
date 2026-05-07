@@ -6,7 +6,7 @@
 {{- $allPosts := where .Site.RegularPages "Section" "posts" }}
 {{- $hero := index $allPosts 0 }}
 {{- $trio := $allPosts | after 1 | first 3 }}
-{{- $rest := $allPosts | after 4 | first 3 }}
+{{- $rest := $allPosts | after 4 | first 12 }}
 
 {{- with $hero }}
 <section class="hero">
@@ -69,21 +69,12 @@
       <a href="/posts/" class="section-more">Voir tout →</a>
     </div>
 
-    <div class="article-grid article-grid--3">
+    <div class="article-grid article-grid--4">
       {{- range $rest }}
       {{ partial "article-card.html" . }}
       {{- end }}
     </div>
   </section>
-
-  <aside class="sidebar">
-    <div class="section-header">
-      <span class="section-title">Les plus lus</span>
-    </div>
-    {{- range hugo.Data.trending }}
-    {{ partial "trending-item.html" . }}
-    {{- end }}
-  </aside>
 
 </div>
 
