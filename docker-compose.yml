@@ -1,0 +1,13 @@
+services:
+  dailyplanet-pipeline:
+    build: .
+    container_name: dailyplanet-pipeline
+    restart: unless-stopped
+    volumes:
+      - ./pipeline/db:/app/pipeline/db
+      - ./logs:/app/logs
+      - /home/dailyplanet/.ssh:/root/.ssh:ro
+    env_file:
+      - .env
+    environment:
+      - TZ=Europe/Paris

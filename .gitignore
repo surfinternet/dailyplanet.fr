@@ -2,3 +2,15 @@ public/
 resources/_gen/
 .hugo_build.lock
 .DS_Store
+
+# Pipeline
+.env
+pipeline/db/*.db
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

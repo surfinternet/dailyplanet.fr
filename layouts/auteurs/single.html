@@ -1,0 +1,50 @@
+{{ define "main" }}
+{{- $authorName := .Params.author_name | default .Title }}
+{{- $articles := where .Site.RegularPages "Params.author" $authorName | default (slice) }}
+
+<div class="author-page-wrapper">
+
+  <div class="author-page-profile">
+    <div class="author-page-avatar">{{ .Params.author_initials | default "?" }}</div>
+    <div class="author-page-info">
+      <h1 class="author-page-name">{{ $authorName }}</h1>
+      {{ with .Params.author_role }}
+      <div class="author-page-role">{{ . }}</div>
+      {{ end }}
+      {{ with .Params.author_bio }}
+      <p class="author-page-bio">{{ . }}</p>
+      {{ end }}
+      {{ if or .Params.author_linkedin .Params.author_x }}
+      <div class="author-page-socials">
+        {{ with .Params.author_linkedin }}
+        <a href="{{ . }}" target="_blank" rel="noopener noreferrer" class="author-social-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+        {{ end }}
+        {{ with .Params.author_x }}
+        <a href="{{ . }}" target="_blank" rel="noopener noreferrer" class="author-social-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X (Twitter)
+        </a>
+        {{ end }}
+      </div>
+      {{ end }}
+    </div>
+  </div>
+
+  {{ if $articles }}
+  <div class="author-page-articles">
+    <div class="section-header">
+      <span class="section-title">{{ len $articles }} article{{ if gt (len $articles) 1 }}s{{ end }}</span>
+    </div>
+    <div class="article-grid">
+      {{ range $articles }}
+      {{ partial "article-card.html" . }}
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+
+</div>
+{{ end }}

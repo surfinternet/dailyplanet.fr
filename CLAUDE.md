@@ -2,7 +2,7 @@
 
 ## Présentation
 Site Hugo statique pour Daily Planet FR, média français IA/tech.  
-Hugo 0.158.0 extended — pas de thème externe, tous les layouts sont à la racine.  
+Hugo 0.161.1 extended — pas de thème externe, tous les layouts sont à la racine.  
 Déployé sur Cloudflare Pages depuis GitHub `surfinternet/dailyplanet.fr`.
 
 ## Commandes essentielles
@@ -71,7 +71,7 @@ featured: false           # true = article hero homepage
 - Repo : `surfinternet/dailyplanet.fr`
 - Build command : `hugo`
 - Output directory : `public`
-- Variable d'environnement : `HUGO_VERSION=0.158.0`
+- Variable d'environnement : `HUGO_VERSION=0.161.1`
 - Pas de GitHub Actions — Cloudflare Pages gère le CI/CD nativement
 
 ## Règles importantes

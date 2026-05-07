@@ -2,7 +2,7 @@
   <a href="/">Accueil</a>
   <span class="breadcrumb-sep">/</span>
   {{ with .CurrentSection }}
-  <a href="{{ .Permalink }}">{{ .Title }}</a>
+  <a href="{{ .RelPermalink }}">{{ .Title }}</a>
   <span class="breadcrumb-sep">/</span>
   {{ end }}
   <span class="current">{{ .Params.category | default .Title }}</span>

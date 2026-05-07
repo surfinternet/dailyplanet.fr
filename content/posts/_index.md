@@ -1,4 +1,4 @@
 ---
 title: "Actualités"
-description: "Tous les articles de Daily Planet FR — IA, Tech, Politique, Société."
+description: "Tous les articles de Daily Planet — IA, Tech, Politique, Société."
 ---

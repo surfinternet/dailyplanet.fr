@@ -4,31 +4,41 @@
 
 {{ define "main" }}
 {{- $allPosts := where .Site.RegularPages "Section" "posts" }}
-{{- $hero := where $allPosts "Params.featured" true | first 1 }}
-{{- $others := where $allPosts "Params.featured" "ne" true | first 6 }}
-{{- $cardLarge := first 1 $others }}
-{{- $cards := after 1 $others }}
+{{- $hero := index $allPosts 0 }}
+{{- $trio := $allPosts | after 1 | first 3 }}
+{{- $rest := $allPosts | after 4 | first 3 }}
 
-{{- with index $hero 0 }}
+{{- with $hero }}
 <section class="hero">
   <div class="hero-inner">
-    <a href="{{ .Permalink }}" class="hero-image">
-      {{- if .Params.image }}
+    <a href="{{ .RelPermalink }}" class="hero-image">
+      {{- $alt := .Params.image_alt | default .Params.image_caption | default .Title }}
+      {{- if .Params.image_display }}
+        <img src="{{ .Params.image_display }}" alt="{{ $alt }}"
+             width="{{ .Params.image_width }}" height="{{ .Params.image_height }}"
+             loading="eager" fetchpriority="high">
+      {{- else if .Params.image }}
         {{- $img := resources.Get .Params.image }}
         {{- if $img }}
-          {{- $webp := $img.Resize "1200x675 WebP" }}
-          <img src="{{ $webp.RelPermalink }}" alt="{{ .Title }}" width="1200" height="675" loading="eager" fetchpriority="high">
+          {{- $sm := $img.Resize "480x webp" }}
+          {{- $md := $img.Resize "800x webp" }}
+          {{- $lg := $img.Resize "1200x webp" }}
+          <picture>
+            <source media="(max-width: 579px)" srcset="{{ $sm.RelPermalink }}" type="image/webp">
+            <source media="(max-width: 899px)" srcset="{{ $md.RelPermalink }}" type="image/webp">
+            <img src="{{ $lg.RelPermalink }}" alt="{{ $alt }}"
+                 width="{{ $lg.Width }}" height="{{ $lg.Height }}"
+                 loading="eager" fetchpriority="high">
+          </picture>
         {{- else }}
-          <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 21:9 ou 16:9</div>
+          <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 16:9</div>
         {{- end }}
       {{- else }}
-        <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 21:9 ou 16:9</div>
+        <div class="img-placeholder" style="height:100%;min-height:340px;font-size:13px">IMAGE HERO — illustration comics style<br>ratio 16:9</div>
       {{- end }}
     </a>
     <div class="hero-content">
-      <div class="hero-tag"><span class="tag filled">{{ .Params.category }}</span></div>
-      <h1 class="hero-title"><a href="{{ .Permalink }}">{{ .Title }}</a></h1>
-      <p class="hero-chapo">{{ .Description | default (.Summary | plainify | truncate 200) }}</p>
+      <h1 class="hero-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h1>
       <div class="hero-meta">
         <span>Par <strong>{{ .Params.author }}</strong></span>
         <span class="separator">—</span>
@@ -41,6 +51,16 @@
 </section>
 {{- end }}
 
+{{- if $trio }}
+<div class="hero-trio">
+  <div class="article-grid article-grid--3">
+    {{- range $trio }}
+    {{ partial "article-card.html" . }}
+    {{- end }}
+  </div>
+</div>
+{{- end }}
+
 <main class="main-content">
 
   <section>
@@ -49,16 +69,10 @@
       <a href="/posts/" class="section-more">Voir tout →</a>
     </div>
 
-    <div class="article-grid">
-
-      {{- with index $cardLarge 0 }}
-      {{ partial "article-card-large.html" . }}
-      {{- end }}
-
-      {{- range $cards }}
+    <div class="article-grid article-grid--3">
+      {{- range $rest }}
       {{ partial "article-card.html" . }}
       {{- end }}
-
     </div>
   </section>
 

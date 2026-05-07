@@ -1,12 +1,19 @@
 {{ $page := . }}
 <article class="article-card">
-  <a href="{{ $page.Permalink }}">
+  <a href="{{ $page.RelPermalink }}">
     <div class="card-image">
-      {{- if $page.Params.image }}
+      {{- $alt := $page.Params.image_alt | default $page.Params.image_caption | default $page.Title }}
+      {{- if $page.Params.image_display }}
+        <img src="{{ $page.Params.image_display }}" alt="{{ $alt }}"
+             width="{{ $page.Params.image_width }}" height="{{ $page.Params.image_height }}"
+             loading="lazy">
+      {{- else if $page.Params.image }}
         {{- $img := resources.Get $page.Params.image }}
         {{- if $img }}
-          {{- $webp := $img.Resize "800x450 WebP" }}
-          <img src="{{ $webp.RelPermalink }}" alt="{{ $page.Title }}" width="800" height="450" loading="lazy">
+          {{- $img_w := $img.Resize "800x450 webp" }}
+          <img src="{{ $img_w.RelPermalink }}" alt="{{ $alt }}"
+               width="{{ $img_w.Width }}" height="{{ $img_w.Height }}"
+               loading="lazy">
         {{- else }}
           <div class="img-placeholder" style="height:180px">illustration comics</div>
         {{- end }}
@@ -15,12 +22,9 @@
       {{- end }}
     </div>
   </a>
-  <div class="card-tag">
-    <span class="tag">{{ $page.Params.category }}</span>
-  </div>
   <h2 class="card-title">
-    <a href="{{ $page.Permalink }}">{{ $page.Title }}</a>
+    <a href="{{ $page.RelPermalink }}">{{ $page.Title }}</a>
   </h2>
-  <p class="card-chapo">{{ $page.Description | default ($page.Summary | plainify | truncate 120) }}</p>
+  <p class="card-chapo">{{ $page.Params.chapo | default $page.Description | default ($page.Summary | plainify | truncate 120) }}</p>
   <div class="card-meta">{{ $page.Date | time.Format "2 January 2006" }} · {{ $page.Params.readtime }} min</div>
 </article>

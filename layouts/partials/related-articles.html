@@ -7,7 +7,7 @@
   </div>
   <div class="related-grid">
     {{- range $related }}
-    <a href="{{ .Permalink }}" class="related-card">
+    <a href="{{ .RelPermalink }}" class="related-card">
       <div class="related-image">
         {{- if .Params.image }}
           {{- $img := resources.Get .Params.image }}

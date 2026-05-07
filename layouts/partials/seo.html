@@ -1,22 +1,34 @@
-{{- $title := .Title -}}
-{{- $desc  := .Description | default .Site.Params.description -}}
-{{- $imageURL := "" -}}
-{{- $url   := .Permalink -}}
+{{- $title    := .Title -}}
+{{- $seoTitle := .Params.seo_title | default .Title -}}
+{{- $desc     := .Description | default .Site.Params.description -}}
+{{- $url      := .Permalink -}}
 {{- $isArticle := and (eq .Section "posts") .IsPage -}}
+{{- $ogImgURL := "" -}}
+{{- $ogImgW   := 1200 -}}
+{{- $ogImgH   := 675 -}}
 
 {{- if .Params.image -}}
-  {{- $imageURL = printf "%s%s" .Site.BaseURL (strings.TrimPrefix "/" .Params.image) -}}
+  {{- $img := resources.Get .Params.image -}}
+  {{- if $img -}}
+    {{- /* Fill = crop exact 1200×675 — required for social crawlers and Discover */}}
+    {{- $ogImg    := $img.Fill "1200x675 center webp" -}}
+    {{- $ogImgURL  = $ogImg.Permalink -}}
+    {{- $ogImgW    = $ogImg.Width -}}
+    {{- $ogImgH    = $ogImg.Height -}}
+  {{- end -}}
 {{- end -}}
 
 {{- if .IsHome -}}
   {{- $title = printf "%s — %s" .Site.Title .Site.Params.description -}}
 {{- else -}}
-  {{- $title = printf "%s — %s" .Title .Site.Title -}}
+  {{- $title = printf "%s — %s" $seoTitle .Site.Title -}}
 {{- end -}}
 
 <title>{{ $title }}</title>
 <meta name="description" content="{{ $desc }}">
 <link rel="canonical" href="{{ $url }}">
+{{- /* max-image-preview:large — requis pour Google Discover sur toutes les pages */}}
+<meta name="robots" content="max-image-preview:large, index, follow">
 
 <!-- Open Graph -->
 <meta property="og:site_name" content="{{ .Site.Title }}">
@@ -32,47 +44,61 @@
 {{- else }}
 <meta property="og:type" content="website">
 {{- end }}
-{{- if $imageURL }}<meta property="og:image" content="{{ $imageURL }}">{{- end }}
+{{- if $ogImgURL }}
+<meta property="og:image" content="{{ $ogImgURL }}">
+<meta property="og:image:width" content="{{ $ogImgW }}">
+<meta property="og:image:height" content="{{ $ogImgH }}">
+<meta property="og:image:type" content="image/webp">
+{{- end }}
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="{{ if $imageURL }}summary_large_image{{ else }}summary{{ end }}">
+<meta name="twitter:card" content="{{ if $ogImgURL }}summary_large_image{{ else }}summary{{ end }}">
 <meta name="twitter:site" content="{{ .Site.Params.twitterHandle }}">
 <meta name="twitter:title" content="{{ $title }}">
 <meta name="twitter:description" content="{{ $desc }}">
-{{- if $imageURL }}<meta name="twitter:image" content="{{ $imageURL }}">{{- end }}
+{{- if $ogImgURL }}<meta name="twitter:image" content="{{ $ogImgURL }}">{{- end }}
 
 <!-- Schema.org -->
 {{- if $isArticle -}}
+{{- $authorSchema := dict "@type" "Person" "name" (.Params.author | default .Site.Params.author) "jobTitle" (.Params.author_role | default "") -}}
+{{- $sameAs := slice -}}
+{{- with .Params.author_url }}{{- $sameAs = $sameAs | append (absURL .) }}{{- end }}
+{{- with .Params.author_linkedin }}{{- $sameAs = $sameAs | append . }}{{- end }}
+{{- with .Params.author_x }}{{- $sameAs = $sameAs | append . }}{{- end }}
+{{- if $sameAs }}{{- $authorSchema = merge $authorSchema (dict "sameAs" $sameAs) }}{{- end }}
 {{- $schema := dict
   "@context" "https://schema.org"
-  "@type" "Article"
-  "headline" .Title
-  "description" $desc
-  "url" $url
+  "@type"    "NewsArticle"
+  "headline"      .Title
+  "description"   $desc
+  "url"           $url
   "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
-  "dateModified" (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
-  "author" (dict "@type" "Person" "name" (.Params.author | default .Site.Params.author))
+  "dateModified"  (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+  "author"    $authorSchema
   "publisher" (dict "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL)
 -}}
-{{- if $imageURL -}}{{- $schema = merge $schema (dict "image" $imageURL) -}}{{- end -}}
+{{- if $ogImgURL -}}
+  {{- $schema = merge $schema (dict "image" (slice $ogImgURL)) -}}
+{{- end -}}
 <script type="application/ld+json">{{ $schema | jsonify | safeJS }}</script>
 
 {{- $breadcrumb := dict
   "@context" "https://schema.org"
-  "@type" "BreadcrumbList"
+  "@type"    "BreadcrumbList"
   "itemListElement" (slice
-    (dict "@type" "ListItem" "position" 1 "name" "Accueil" "item" .Site.BaseURL)
-    (dict "@type" "ListItem" "position" 2 "name" (.CurrentSection.Title) "item" (.CurrentSection.Permalink))
-    (dict "@type" "ListItem" "position" 3 "name" .Title "item" $url)
+    (dict "@type" "ListItem" "position" 1 "name" "Accueil"                     "item" .Site.BaseURL)
+    (dict "@type" "ListItem" "position" 2 "name" .CurrentSection.Title         "item" .CurrentSection.Permalink)
+    (dict "@type" "ListItem" "position" 3 "name" .Title                        "item" $url)
   )
 -}}
 <script type="application/ld+json">{{ $breadcrumb | jsonify | safeJS }}</script>
+
 {{- else -}}
 {{- $schema := dict
-  "@context" "https://schema.org"
-  "@type" "WebSite"
-  "name" .Site.Title
-  "url" .Site.BaseURL
+  "@context"   "https://schema.org"
+  "@type"      "WebSite"
+  "name"        .Site.Title
+  "url"         .Site.BaseURL
   "description" .Site.Params.description
 -}}
 <script type="application/ld+json">{{ $schema | jsonify | safeJS }}</script>

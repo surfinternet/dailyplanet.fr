@@ -1,8 +1,29 @@
+{{ $authorUrl := .Params.author_url }}
 <div class="author-box">
+  {{ if $authorUrl }}
+  <a href="{{ $authorUrl }}" class="author-avatar" aria-label="Profil de {{ .Params.author | default .Site.Params.author }}">{{ .Params.author_initials | default "DP" }}</a>
+  {{ else }}
   <div class="author-avatar">{{ .Params.author_initials | default "DP" }}</div>
+  {{ end }}
   <div class="author-info">
-    <div class="author-name">{{ .Params.author | default .Site.Params.author }}</div>
+    <div class="author-name">
+      {{ if $authorUrl }}
+      <a href="{{ $authorUrl }}">{{ .Params.author | default .Site.Params.author }}</a>
+      {{ else }}
+      {{ .Params.author | default .Site.Params.author }}
+      {{ end }}
+    </div>
     {{ with .Params.author_role }}<div class="author-role">{{ . }}</div>{{ end }}
     {{ with .Params.author_bio }}<p class="author-bio">{{ . }}</p>{{ end }}
+    {{ if or .Params.author_linkedin .Params.author_x }}
+    <div class="author-box-socials">
+      {{ with .Params.author_linkedin }}
+      <a href="{{ . }}" target="_blank" rel="noopener noreferrer" class="author-social-link author-social-link--sm">LinkedIn</a>
+      {{ end }}
+      {{ with .Params.author_x }}
+      <a href="{{ . }}" target="_blank" rel="noopener noreferrer" class="author-social-link author-social-link--sm">X (Twitter)</a>
+      {{ end }}
+    </div>
+    {{ end }}
   </div>
 </div>

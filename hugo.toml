@@ -15,6 +15,9 @@ defaultContentLanguage = "fr"
   linkedinURL   = "https://linkedin.com/company/dailyplanetfr"
   rssURL        = "/index.xml"
 
+[permalinks]
+  posts = "/:slug/"
+
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]
