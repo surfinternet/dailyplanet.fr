@@ -1,7 +1,7 @@
 {{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  {{- /* Homepage — priority max, mise à jour à chaque article */}}
+  {{- /* Homepage */}}
   <url>
     <loc>{{ .Site.BaseURL }}</loc>
     <lastmod>{{ now.Format "2006-01-02" }}</lastmod>
@@ -9,19 +9,7 @@
     <priority>1.0</priority>
   </url>
 
-  {{- /* Liste des articles /posts/ */}}
-  {{- range where .Site.Pages "Kind" "section" }}
-  {{- if eq .Section "posts" }}
-  <url>
-    <loc>{{ .Permalink }}</loc>
-    <lastmod>{{ .Lastmod.Format "2006-01-02" }}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  {{- end }}
-  {{- end }}
-
-  {{- /* Articles — priorité haute, changefreq weekly (contenu d'actualité) */}}
+  {{- /* Articles */}}
   {{- range where .Site.RegularPages "Section" "posts" }}
   {{- if not .Draft }}
   <url>
@@ -36,9 +24,13 @@
   {{- /* Pages statiques (about, contact, legal, charter, auteurs) */}}
   {{- range where .Site.RegularPages "Section" "!=" "posts" }}
   {{- if not .Draft }}
+  {{- $lastmod := .Lastmod }}
+  {{- if .Lastmod.IsZero }}{{- $lastmod = .Date }}{{- end }}
   <url>
     <loc>{{ .Permalink }}</loc>
-    <lastmod>{{ .Lastmod.Format "2006-01-02" }}</lastmod>
+    {{- if not $lastmod.IsZero }}
+    <lastmod>{{ $lastmod.Format "2006-01-02" }}</lastmod>
+    {{- end }}
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
