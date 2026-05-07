@@ -17,6 +17,16 @@
     {{- $ogImgH    = $ogImg.Height -}}
   {{- end -}}
 {{- end -}}
+{{- /* Fallback OG image for homepage and pages without image */}}
+{{- if not $ogImgURL -}}
+  {{- $defaultImg := resources.Get (.Site.Params.og_image | default "images/og-magazine-ia-tech.webp") -}}
+  {{- if $defaultImg -}}
+    {{- $ogImg   := $defaultImg.Fill "1200x675 center webp" -}}
+    {{- $ogImgURL = $ogImg.Permalink -}}
+    {{- $ogImgW   = $ogImg.Width -}}
+    {{- $ogImgH   = $ogImg.Height -}}
+  {{- end -}}
+{{- end -}}
 
 {{- if .IsHome -}}
   {{- $title = printf "%s — %s" .Site.Title .Site.Params.description -}}
