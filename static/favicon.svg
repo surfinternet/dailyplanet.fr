@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="5" fill="#0A0A0A"/>
+  <text x="5" y="26"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-weight="700"
+    font-size="25"
+    fill="#FAFAF7">D</text>
+  <circle cx="25" cy="9" r="5" fill="#BE1C28"/>
+</svg>
