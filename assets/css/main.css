@@ -284,15 +284,6 @@ picture { display: block; width: 100%; height: 100%; }
   max-width: var(--max);
   margin: 0 auto;
   padding: 40px var(--col);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 48px;
-}
-@media (min-width: 900px) {
-  .main-content {
-    grid-template-columns: 1fr 300px;
-    gap: 64px;
-  }
 }
 
 /* ─── 10. ARTICLE GRID (homepage) ─── */
@@ -318,6 +309,9 @@ picture { display: block; width: 100%; height: 100%; }
 @media (min-width: 900px) {
   .article-grid--3 {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .article-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
