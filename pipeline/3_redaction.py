@@ -122,11 +122,15 @@ def llm_call(system: str, user: str) -> str:
 
 def rediger(sujet_titre: str, sujet_source: str, sujet_url: str) -> str:
     system = load_system_prompt()
+    date_now = datetime.now(timezone.utc).strftime("%d/%m/%Y")
     user = (
+        f"Date du jour : {date_now}\n"
         f"Sujet : {sujet_titre}\n"
         f"Source : {sujet_source}\n"
         f"URL source : {sujet_url}\n\n"
-        "Rédige l'article complet selon les instructions."
+        "Rédige l'article complet selon les instructions. "
+        "Les informations sur les modèles IA, produits et entreprises doivent refléter "
+        "l'état actuel à la date indiquée ci-dessus."
     )
     return llm_call(system, user)
 

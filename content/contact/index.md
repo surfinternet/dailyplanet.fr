@@ -18,7 +18,7 @@ subtitle: "Une information à signaler, un partenariat, une correction à demand
 
 ## Politique de correction
 
-Nous nous engageons à corriger toute erreur factuelle signalée dans les 24 heures. Les corrections sont indiquées en bas d'article avec la date et la nature de la modification. Nous ne supprimons pas les articles — nous les corrigeons de façon transparente.
+Nous nous engageons à corriger toute erreur factuelle signalée dans les 24 heures. Les corrections sont indiquées en bas d'article avec la date et la nature de la modification. Nous ne supprimons pas les articles - nous les corrigeons de façon transparente.
 
 ## Signalement
 

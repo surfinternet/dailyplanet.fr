@@ -7,8 +7,8 @@ enableEmoji = false
 defaultContentLanguage = "fr"
 
 [params]
-  description   = "L'IA et la tech qui comptent, sans la langue de bois."
-  tagline       = "L'IA et la tech qui comptent, sans la langue de bois."
+  description   = "Le journal de la planète IA"
+  tagline       = "Le journal de la planète IA"
   author        = "Rédaction Daily Planet"
   twitterHandle = "@DailyPlanetFR"
   twitterURL    = "https://x.com/DailyPlanetFR"
@@ -52,7 +52,7 @@ defaultContentLanguage = "fr"
 
   [[menu.footer]]
     name   = "À propos"
-    url    = "/about/"
+    url    = "/a-propos/"
     weight = 1
   [[menu.footer]]
     name   = "Mentions légales"

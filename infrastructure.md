@@ -15,7 +15,7 @@ Branche    : content
 ## SETUP INITIAL D'UN NOUVEAU VPS
 > Utilise cette section quand tu changes de serveur.
 > Donne cette section à Claude Code avec la nouvelle IP — il peut tout faire sauf l'étape GitHub (navigateur).
-
+<!-- instruction à demander à Claude Code : Je change de VPS, nouvelle IP : X.X.X.X — suis la procédure dans infrastructure.md -->
 ### Étape 1 — Préparer le VPS (depuis ton Mac, donner à Claude Code)
 
 ```bash
