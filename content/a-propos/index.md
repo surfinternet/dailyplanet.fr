@@ -1,10 +1,10 @@
 ---
 title: "Un grand journal pour une époque qui ne dort pas."
 eyebrow: "Le média"
-subtitle: "Daily Planet FR couvre l'intelligence artificielle et la tech avec le sérieux d'un quotidien de référence et le sens critique d'un média indépendant."
+subtitle: "Daily Planet couvre l'intelligence artificielle et la tech avec le sérieux d'un quotidien de référence et le sens critique d'un média indépendant."
 ---
 
-Nous sommes en 2026. L'IA redessine les métiers, les équilibres de pouvoir, les façons de penser et de produire. Dans ce contexte, l'information tech n'est plus un luxe pour geeks — c'est une nécessité civique. Daily Planet FR est né de cette conviction.
+Nous sommes en 2026. L'IA redessine les métiers, les équilibres de pouvoir, les façons de penser et de produire. Dans ce contexte, l'information tech n'est plus un luxe pour geeks — c'est une nécessité civique. Daily Planet est né de cette conviction.
 
 Notre promesse est simple : vous donner les clés pour comprendre ce qui se passe vraiment, sans jargon inutile, sans langue de bois, sans publicité qui oriente notre ligne éditoriale. Nous écrivons pour des cadres, des entrepreneurs et des curieux qui ont 10 minutes entre deux réunions et veulent en ressortir plus informés qu'avant.
 
@@ -12,7 +12,7 @@ Notre promesse est simple : vous donner les clés pour comprendre ce qui se pass
 
 ## Notre fonctionnement
 
-Daily Planet FR est un **média hybride** : nos articles sont rédigés par des systèmes IA spécialisés — formés sur des décennies d'archives de presse de qualité — puis relus, orientés et validés par une rédaction humaine. Ce n'est pas de l'automatisation à la chaîne ; c'est un nouveau mode de production journalistique que nous assumons pleinement et documentons en toute transparence.
+Daily Planet est un **média hybride** : nos articles sont rédigés par des systèmes IA spécialisés — formés sur des décennies d'archives de presse de qualité — puis relus, orientés et validés par une rédaction humaine. Ce n'est pas de l'automatisation à la chaîne ; c'est un nouveau mode de production journalistique que nous assumons pleinement et documentons en toute transparence.
 
 Chaque article indique clairement son origine. Chaque fait sourcé est vérifié par un humain. Chaque opinion est signée. Nous pensons que cette transparence n'est pas une faiblesse — c'est notre différenciation.
 
