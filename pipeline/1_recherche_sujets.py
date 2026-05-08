@@ -96,6 +96,17 @@ def save_to_db(sujets: list) -> int:
     return saved
 
 
+def recycle_ignored(conn: sqlite3.Connection) -> int:
+    """Reset 'ignoré' subjects back to 'trouvé' as fallback when no new topics found."""
+    c = conn.cursor()
+    c.execute(
+        "UPDATE sujets SET statut = 'trouvé' WHERE statut = 'ignoré'"
+    )
+    recycled = c.rowcount
+    conn.commit()
+    return recycled
+
+
 def run(context: dict) -> dict:
     api_key = os.getenv("OPENROUTER_API_KEY", "")
     if not api_key or api_key.startswith("sk-or-remplacez"):
@@ -103,6 +114,18 @@ def run(context: dict) -> dict:
 
     sujets = call_perplexity(api_key)
     nb_saved = save_to_db(sujets)
+
+    if nb_saved == 0:
+        # All topics from API were duplicates — recycle previously ignored subjects
+        conn = sqlite3.connect(DB_PATH)
+        recycled = recycle_ignored(conn)
+        conn.close()
+        if recycled == 0:
+            raise RuntimeError(
+                "Aucun nouveau sujet trouvé et aucun sujet 'ignoré' à recycler. "
+                "Base vide ou tous les sujets déjà traités."
+            )
+        print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) 'ignoré' recyclé(s) vers 'trouvé'")
 
     return {"nb_sujets_trouves": nb_saved, "_sujets_raw": sujets}
 
