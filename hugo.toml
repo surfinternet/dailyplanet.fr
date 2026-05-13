@@ -14,6 +14,7 @@ defaultContentLanguage = "fr"
   twitterURL    = "https://x.com/DailyPlanetFR"
   linkedinURL   = "https://linkedin.com/company/dailyplanetfr"
   rssURL        = "/index.xml"
+  publisher_logo_url = ""
 
 [permalinks]
   posts = "/:slug/"
