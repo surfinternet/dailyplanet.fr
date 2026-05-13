@@ -114,12 +114,21 @@ def save_to_db(sujets: list) -> int:
     return saved
 
 
-def recycle_ignored(conn: sqlite3.Connection) -> int:
-    """Reset 'ignoré' subjects back to 'trouvé' as fallback when no new topics found."""
+def recycle_stale(conn: sqlite3.Connection) -> int:
+    """Reset 'ignoré' and stuck 'sélectionné' subjects back to 'trouvé'."""
     c = conn.cursor()
     c.execute(
-        "UPDATE sujets SET statut = 'trouvé' WHERE statut = 'ignoré'"
+        "UPDATE sujets SET statut = 'trouvé' WHERE statut IN ('ignoré', 'sélectionné')"
     )
+    recycled = c.rowcount
+    conn.commit()
+    return recycled
+
+
+def recycle_treated(conn: sqlite3.Connection) -> int:
+    """Last resort: reset all 'traité' subjects to 'trouvé' so the pipeline never stalls."""
+    c = conn.cursor()
+    c.execute("UPDATE sujets SET statut = 'trouvé' WHERE statut = 'traité'")
     recycled = c.rowcount
     conn.commit()
     return recycled
@@ -137,16 +146,21 @@ def run(context: dict) -> dict:
     nb_saved = save_to_db(sujets)
 
     if nb_saved == 0:
-        # All topics from API were duplicates — recycle previously ignored subjects
         conn = sqlite3.connect(DB_PATH)
-        recycled = recycle_ignored(conn)
+        recycled = recycle_stale(conn)
+        if recycled == 0:
+            # All subjects already treated — recycle them so pipeline can continue
+            recycled = recycle_treated(conn)
+            if recycled > 0:
+                print(f"  ⚠ DB épuisée — {recycled} sujet(s) 'traité' recyclé(s) vers 'trouvé'")
+        else:
+            print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) recyclé(s) vers 'trouvé'")
         conn.close()
         if recycled == 0:
             raise RuntimeError(
-                "Aucun nouveau sujet trouvé et aucun sujet 'ignoré' à recycler. "
-                "Base vide ou tous les sujets déjà traités."
+                "Base de données vide et aucun sujet récupérable. "
+                "Vérifier la connexion à l'API Perplexity."
             )
-        print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) 'ignoré' recyclé(s) vers 'trouvé'")
 
     return {
         "nb_sujets_trouves": nb_saved,
