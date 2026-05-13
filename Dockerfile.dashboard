@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+
+RUN pip install --no-cache-dir flask==3.0.3
+
+WORKDIR /app
+
+# Code and logs come from the volume mount at runtime — nothing to COPY here.
+EXPOSE 8080
+
+CMD ["python", "/app/pipeline/dashboard/app.py"]

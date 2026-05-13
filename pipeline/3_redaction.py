@@ -18,6 +18,11 @@ import subprocess
 import requests
 from datetime import datetime, timezone
 
+sys.path.insert(0, os.path.dirname(__file__))
+from cost import usage_cost
+
+_claude_cost_usd = 0.0
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 PROMPTS_DIR = os.path.join(os.path.dirname(__file__), "..", "prompts")
@@ -89,6 +94,7 @@ def call_claude_cli(prompt: str) -> str:
 
 
 def call_openrouter(system: str, user: str) -> str:
+    global _claude_cost_usd
     api_key = os.getenv("OPENROUTER_API_KEY", "")
     model = os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-4-6")
     headers = {
@@ -106,7 +112,9 @@ def call_openrouter(system: str, user: str) -> str:
     }
     response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=120)
     response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"].strip()
+    resp_data = response.json()
+    _claude_cost_usd += usage_cost(model, resp_data.get("usage", {}))
+    return resp_data["choices"][0]["message"]["content"].strip()
 
 
 def llm_call(system: str, user: str) -> str:
@@ -177,6 +185,9 @@ def save_to_db(sujet_id: int, titre: str, slug: str, contenu: str) -> int:
 # ── Interface pipeline ────────────────────────────────────────────────────────
 
 def run(context: dict) -> dict:
+    global _claude_cost_usd
+    _claude_cost_usd = 0.0
+
     sujet_id     = context.get("sujet_id")
     sujet_titre  = context.get("sujet_titre", "")
     sujet_source = context.get("sujet_source", "")
@@ -200,6 +211,7 @@ def run(context: dict) -> dict:
         "article_titre": titre,
         "article_slug": slug,
         "article_contenu": contenu,
+        "_cost_claude_usd": _claude_cost_usd,
     }
 
 

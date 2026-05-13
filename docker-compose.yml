@@ -12,3 +12,21 @@ services:
       - /home/dailyplanet/dailyplanet.fr/.env
     environment:
       - TZ=Europe/Paris
+
+  dailyplanet-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: dailyplanet-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # Same repo mount — gives access to /app/logs/runs/ and pipeline code
+      - /home/dailyplanet/dailyplanet.fr:/app
+    env_file:
+      - /home/dailyplanet/dailyplanet.fr/.env
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - dailyplanet-pipeline

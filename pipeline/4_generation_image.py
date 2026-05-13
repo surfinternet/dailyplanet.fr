@@ -292,6 +292,7 @@ def run(context: dict) -> dict:
         "article_image_display": avif_url,
         "article_image_width":   img_w,
         "article_image_height":  img_h,
+        "_cost_image_usd":       float(os.getenv("PRICE_IMAGE_USD", "0.04")),
     }
 
 
