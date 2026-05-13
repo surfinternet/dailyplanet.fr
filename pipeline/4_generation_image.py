@@ -37,6 +37,7 @@ IMAGE_TEMPLATE = (
     "Dynamic composition with strong diagonal lines. {emotion} mood. "
     "1970s Marvel Comics cover aesthetic, Jack Kirby influence. "
     "Company logos and brand marks rendered in comics style are encouraged — stylized, bold, integrated into the scene as background elements, signs, or props. "
+    "Any text visible in the scene (signs, screens, banners, labels, amounts) must be written in French — use French number formatting (e.g. '8 milliards de $' not '$8 billion', '40 Md$' not '$40B'). "
     "No speech bubbles, no watermarks. "
     "High contrast, professional editorial quality."
 )
@@ -49,7 +50,7 @@ Format : {{"sujet_visuel": "...", "emotion": "...", "couleur_dominante": "..."}}
 
 Règles pour sujet_visuel :
 - EN ANGLAIS, 2-3 phrases narratives, scène concrète et précise
-- Utilise les CHIFFRES EXACTS quand l'article en mentionne (ex: "seven figures", pas "several")
+- Utilise les CHIFFRES EXACTS quand l'article en mentionne — IMPORTANT : formate les montants à l'anglaise pour le prompt image mais ajoute la note (French format on screen) ex: "a screen showing '8 milliards de $'" pas "a screen showing '$8 billion'"
 - Place les logos des entreprises citées comme éléments visuels dans la scène : sur des murs, enseignes, écrans, drapeaux, badges — ex: "Google logo on the wall", "Anthropic badge on the door"
 - Traduis les institutions en personnages/lieux concrets (ex: militaires pour le Pentagone, chercheurs en blouse pour un labo IA)
 - Inclus systématiquement un élément d'inclusion ET un élément d'exclusion si l'article parle de sélection/rejet
