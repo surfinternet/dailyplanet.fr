@@ -75,11 +75,16 @@ def send_failure_email(run_id: str) -> None:
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, [alert_to], msg.as_string())
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [alert_to], msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [alert_to], msg.as_string())
         print(f"[alert] Email envoyé à {alert_to}")
     except Exception as e:
         print(f"[alert] Échec envoi email : {e}")
