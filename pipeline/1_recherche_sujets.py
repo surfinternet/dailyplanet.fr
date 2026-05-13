@@ -147,20 +147,30 @@ def run(context: dict) -> dict:
 
     if nb_saved == 0:
         conn = sqlite3.connect(DB_PATH)
-        recycled = recycle_stale(conn)
-        if recycled == 0:
-            # All subjects already treated — recycle them so pipeline can continue
-            recycled = recycle_treated(conn)
-            if recycled > 0:
-                print(f"  ⚠ DB épuisée — {recycled} sujet(s) 'traité' recyclé(s) vers 'trouvé'")
+        c = conn.cursor()
+
+        # If 'trouvé' subjects already exist, no action needed — step 2 will pick one
+        c.execute("SELECT COUNT(*) FROM sujets WHERE statut = 'trouvé'")
+        already_available = c.fetchone()[0]
+
+        if already_available > 0:
+            print(f"  ⚠ 0 nouveau sujet (doublons API) — {already_available} sujet(s) 'trouvé' déjà disponibles")
+            conn.close()
         else:
-            print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) recyclé(s) vers 'trouvé'")
-        conn.close()
-        if recycled == 0:
-            raise RuntimeError(
-                "Base de données vide et aucun sujet récupérable. "
-                "Vérifier la connexion à l'API Perplexity."
-            )
+            recycled = recycle_stale(conn)
+            if recycled == 0:
+                # All subjects treated — recycle them so pipeline never stalls
+                recycled = recycle_treated(conn)
+                if recycled > 0:
+                    print(f"  ⚠ DB épuisée — {recycled} sujet(s) 'traité' recyclé(s) vers 'trouvé'")
+            else:
+                print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) recyclé(s) vers 'trouvé'")
+            conn.close()
+            if recycled == 0:
+                raise RuntimeError(
+                    "Base de données vide et aucun sujet récupérable. "
+                    "Vérifier la connexion à l'API Perplexity."
+                )
 
     return {
         "nb_sujets_trouves": nb_saved,
