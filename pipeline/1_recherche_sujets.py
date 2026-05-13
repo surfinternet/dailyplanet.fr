@@ -17,31 +17,28 @@ _perplexity_cost_usd = 0.0
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-SEARCH_PROMPT_TEMPLATE = """Tu es un veilleur spécialisé en intelligence artificielle et technologies numériques.
+SEARCH_PROMPT = """Tu es un veilleur spécialisé en intelligence artificielle et technologies numériques.
 
-Nous sommes le {date_now}. Recherche les 8 actualités les plus importantes et récentes sur l'IA et la tech publiées dans les 48 dernières heures (depuis le {date_48h_ago}). Privilégie :
+Utilise ta capacité de recherche en temps réel pour trouver les 8 actualités les plus importantes et récentes sur l'IA et la tech publiées au cours des 48 dernières heures. Privilégie :
 - Les annonces de nouveaux modèles ou produits IA
 - Les développements réglementaires (Europe, USA, Chine)
 - Les levées de fonds et mouvements stratégiques dans l'industrie IA
 - Les controverses, études ou rapports marquants sur l'IA
 
-IMPORTANT : N'inclus QUE des actualités publiées après le {date_48h_ago}. Rejette toute news antérieure même si elle est pertinente.
+IMPORTANT : N'inclus QUE des actualités publiées dans les 48 dernières heures. Rejette toute news antérieure même si elle est pertinente.
 
 Pour chaque sujet, fournis :
 - titre : un titre descriptif et informatif (max 120 caractères)
 - source : nom du média ou de l'organisation source
 - url_source : URL directe de l'article ou du communiqué
-- date_publiee : date de publication estimée (format YYYY-MM-DD)
+- date_publiee : date de publication (format YYYY-MM-DD)
 
 Retourne UNIQUEMENT un tableau JSON valide, sans texte avant ni après, sans bloc markdown.
-Format exact : [{{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "..."}}, ...]"""
+Format exact : [{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "..."}, ...]"""
 
 
 def build_search_prompt() -> str:
-    now = datetime.now(timezone.utc)
-    date_now = now.strftime("%d/%m/%Y à %H:%M UTC")
-    date_48h_ago = (now - timedelta(hours=48)).strftime("%d/%m/%Y à %H:%M UTC")
-    return SEARCH_PROMPT_TEMPLATE.format(date_now=date_now, date_48h_ago=date_48h_ago)
+    return SEARCH_PROMPT
 
 
 def call_perplexity(api_key: str) -> list:
