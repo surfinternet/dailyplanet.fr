@@ -6,20 +6,24 @@ Critères de score :
   - Chiffres concrets dans le titre (+5)
   - Pénalité titre trop court < 30 chars (-10)
 
-Dédup (3 niveaux) :
-  - Sujets statut='traité' jamais reconsidérés (filtre SQL)
-  - Titres trop similaires à un 'traité' existant : ignorés (overlap > 60 %)
-  - Titres trop similaires aux articles publiés dans les 7 derniers jours (overlap > 35 %)
-  - Combo entité+événement identique dans un article publié dans les 48h : ignoré
+Dédup (2 niveaux) :
+  - Filtre SQL : sujets statut='traité' jamais reconsidérés
+  - Analyse LLM : comparaison sémantique contre les articles publiés (7 derniers jours)
+    → détecte les doublons même si les mots sont différents (ex: "8 milliards" ≠ "dix milliards"
+      mais même événement Anthropic funding)
 """
 
 import os
 import re
 import sys
+import json
 import sqlite3
+import requests
+import subprocess
 from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
+OPENROUTER_URL = "https://openrouter.ai/api/v1"
 
 HIGH_VALUE_KEYWORDS = [
     "milliard", "million", "$", "€",
@@ -30,100 +34,103 @@ HIGH_VALUE_KEYWORDS = [
     "record", "premier", "nouveau", "exclusif",
 ]
 
-STOP_WORDS = {
-    "le", "la", "les", "de", "du", "des", "un", "une", "et", "en",
-    "à", "au", "aux", "sur", "par", "pour", "dans", "avec", "sans",
-    "qui", "que", "est", "sont", "ses", "son", "sa",
-}
+DEDUP_PROMPT = """\
+Tu es l'éditeur d'un site d'actualités IA/tech. Voici les articles déjà publiés ces 7 derniers jours :
 
-# Entités : si même entité + même groupe d'événement trouvés dans un article < 48h → doublon
-ENTITIES = [
-    "anthropic", "openai", "google", "meta", "apple", "microsoft", "mistral",
-    "xai", "nvidia", "amazon", "aws", "deepseek", "grok", "chatgpt", "gemini",
-    "claude", "llama", "sora", "copilot", "hugging face", "cohere",
-]
+{articles_recents}
 
-EVENT_GROUPS = {
-    "financement":   ["milliard", "million", "levée", "lève", "encaisse", "fonds",
-                      "investissement", "valorisation", "tour de table", "raises",
-                      "funding", "invest"],
-    "acquisition":   ["rachète", "acquiert", "acquisition", "fusion", "achat", "buys",
-                      "acquires", "merges"],
-    "licenciement":  ["licencie", "supprime", "postes", "emplois", "layoff", "cuts"],
-    "procès":        ["procès", "enquête", "amende", "condamné", "jugement",
-                      "lawsuit", "fine", "sued"],
-    "lancement":     ["lance", "dévoile", "annonce", "présente", "launches",
-                      "reveals", "announces"],
-}
+Voici les sujets candidats pour le prochain article (avec leur ID) :
+
+{candidats}
+
+Pour chaque candidat, détermine s'il est un DOUBLON SÉMANTIQUE d'un article déjà publié.
+Doublon = même événement principal + même acteur, même si les formulations sont différentes.
+  - "Anthropic lève 10 milliards" ET "Anthropic encaisse 8 milliards" → DOUBLON (même entreprise, même levée de fonds)
+  - "Google investit dans Anthropic" ET "Anthropic annonce son modèle Claude 4" → PAS doublon (événements différents)
+
+Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans commentaire.
+Format : [{{"id": 1, "duplicate": false}}, {{"id": 2, "duplicate": true, "reason": "Même levée de fonds Anthropic que l'article du 13/05"}}]"""
 
 
 def score_titre(titre: str) -> float:
     score = 0.0
     t = titre.lower()
-
     for kw in HIGH_VALUE_KEYWORDS:
         if kw in t:
             score += 10
-
     if re.search(r"\d+", titre):
         score += 5
-
     if len(titre) < 30:
         score -= 10
-
     return score
 
 
-def words(titre: str) -> set:
-    return set(titre.lower().split()) - STOP_WORDS
+def openrouter_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY', '')}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://dailyplanet.fr",
+    }
 
 
-def too_similar(titre_a: str, titre_b: str, threshold: float = 0.6) -> bool:
-    wa, wb = words(titre_a), words(titre_b)
-    if not wa or not wb:
-        return False
-    overlap = len(wa & wb) / min(len(wa), len(wb))
-    return overlap > threshold
+def llm_dedup(candidats: list, articles_recents: list) -> dict:
+    """
+    Ask LLM to detect semantic duplicates.
+    Returns dict: {sujet_id: True/False (is_duplicate)}
+    """
+    if not articles_recents:
+        return {sid: False for sid, _, _, _ in candidats}
 
+    articles_str = "\n".join(f"- {t}" for t in articles_recents)
+    candidats_str = "\n".join(f"- ID {sid}: {titre}" for sid, titre, _, _ in candidats)
+    prompt = DEDUP_PROMPT.format(
+        articles_recents=articles_str,
+        candidats=candidats_str,
+    )
 
-def entity_event_combo(titre: str) -> set:
-    """Return set of (entity, event_group) tuples found in title."""
-    t = titre.lower()
-    combos = set()
-    for entity in ENTITIES:
-        if entity in t:
-            for group_name, keywords in EVENT_GROUPS.items():
-                if any(kw in t for kw in keywords):
-                    combos.add((entity, group_name))
-    return combos
+    mode = os.getenv("MODE", "local")
+
+    if mode == "local":
+        cli_path = os.getenv("CLAUDE_CLI_PATH", "claude")
+        result = subprocess.run(
+            [cli_path, "-p", prompt, "--output-format", "text"],
+            capture_output=True, text=True, timeout=60,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Claude CLI erreur dédup : {result.stderr[:300]}")
+        content = result.stdout.strip()
+    else:
+        payload = {
+            "model": os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-4-6"),
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 500,
+        }
+        r = requests.post(
+            f"{OPENROUTER_URL}/chat/completions",
+            headers=openrouter_headers(),
+            json=payload,
+            timeout=60,
+        )
+        r.raise_for_status()
+        content = r.json()["choices"][0]["message"]["content"].strip()
+
+    if content.startswith("```"):
+        lines = content.splitlines()
+        content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+
+    try:
+        results = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Réponse LLM dédup non parseable : {e}\nContenu : {content[:300]}")
+
+    return {item["id"]: item.get("duplicate", False) for item in results}
 
 
 def run(context: dict) -> dict:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Tous les sujets déjà traités → référence pour dédup (overlap > 60%)
-    c.execute("SELECT titre FROM sujets WHERE statut = 'traité'")
-    traites = [r[0] for r in c.fetchall()]
-
-    # Articles publiés dans les 7 derniers jours → dédup élargi (overlap > 35%)
-    cutoff_7d = (datetime.utcnow() - timedelta(days=7)).isoformat()
-    c.execute(
-        "SELECT titre_final FROM articles WHERE date_creation > ?", (cutoff_7d,)
-    )
-    articles_recents = [r[0] for r in c.fetchall() if r[0]]
-
-    # Articles publiés dans les 48h → dédup entité+événement
-    cutoff_48h = (datetime.utcnow() - timedelta(hours=48)).isoformat()
-    c.execute(
-        "SELECT titre_final FROM articles WHERE date_creation > ?", (cutoff_48h,)
-    )
-    articles_48h = [r[0] for r in c.fetchall() if r[0]]
-    combos_48h = set()
-    for t in articles_48h:
-        combos_48h.update(entity_event_combo(t))
-
-    # Candidats : statut='trouvé' uniquement
+    # Candidats : statut='trouvé' uniquement (les 'traité' sont déjà exclus par SQL)
     c.execute(
         "SELECT id, titre, source, url_source FROM sujets WHERE statut = 'trouvé'"
     )
@@ -136,25 +143,23 @@ def run(context: dict) -> dict:
             "Lance d'abord : python pipeline/1_recherche_sujets.py"
         )
 
-    # Score + filtre doublons (3 niveaux)
+    # Articles publiés dans les 7 derniers jours → référence pour la dédup LLM
+    cutoff_7d = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    c.execute(
+        "SELECT titre_final FROM articles WHERE date_creation > ? ORDER BY date_creation DESC",
+        (cutoff_7d,),
+    )
+    articles_recents = [r[0] for r in c.fetchall() if r[0]]
+
+    # Analyse LLM : détecte les doublons sémantiques
+    duplicates = llm_dedup(candidats, articles_recents)
+
+    # Filtre + scoring
     scores = []
     for sujet_id, titre, source, url in candidats:
-        # Niveau 1 : overlap > 60% avec sujets traités
-        if any(too_similar(titre, t, threshold=0.6) for t in traites):
+        if duplicates.get(sujet_id, False):
             c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
             continue
-
-        # Niveau 2 : overlap > 35% avec articles récents (7j)
-        if any(too_similar(titre, t, threshold=0.35) for t in articles_recents):
-            c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
-            continue
-
-        # Niveau 3 : combo entité+événement identique dans les 48h
-        candidate_combos = entity_event_combo(titre)
-        if candidate_combos & combos_48h:
-            c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
-            continue
-
         scores.append((score_titre(titre), sujet_id, titre, source, url))
 
     conn.commit()
@@ -162,14 +167,13 @@ def run(context: dict) -> dict:
     if not scores:
         conn.close()
         raise RuntimeError(
-            "Tous les sujets sont trop similaires à des articles déjà traités."
+            "Tous les sujets sont des doublons sémantiques d'articles récents."
         )
 
     # Meilleur score
     scores.sort(reverse=True)
     _, best_id, best_titre, best_source, best_url = scores[0]
 
-    # Marque le gagnant sélectionné, ignore les autres
     c.execute("UPDATE sujets SET statut = 'sélectionné' WHERE id = ?", (best_id,))
     for _, sid, *_ in scores[1:]:
         c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sid,))
@@ -178,10 +182,10 @@ def run(context: dict) -> dict:
     conn.close()
 
     return {
-        "sujet_id": best_id,
-        "sujet_titre": best_titre,
+        "sujet_id":     best_id,
+        "sujet_titre":  best_titre,
         "sujet_source": best_source,
-        "sujet_url": best_url,
+        "sujet_url":    best_url,
     }
 
 
@@ -190,47 +194,31 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+    # Simule un article récent pour tester la dédup sémantique
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-
-    # Injecte un sujet fictif statut='traité' pour tester la dédup
+    fake_date = (datetime.utcnow() - timedelta(hours=2)).isoformat()
     c.execute("""
-        INSERT INTO sujets (titre, source, url_source, score, date_trouve, statut)
-        VALUES ('Google investit dans Anthropic milliards', 'test', 'http://test.com', 0, '2026-01-01', 'traité')
-    """)
+        INSERT INTO articles (sujet_id, titre_final, slug, statut, date_creation)
+        VALUES (NULL, 'Anthropic encaisse 8 milliards et reste coincée entre deux géants',
+                'test-anthropic-8b', 'publié', ?)
+    """, (fake_date,))
     conn.commit()
     conn.close()
 
-    print("Sujet 'traité' injecté pour test dédup.\n")
+    print("Article test injecté : 'Anthropic encaisse 8 milliards...'\n")
 
     try:
         result = run({})
     except RuntimeError as e:
-        print(f"Erreur attendue (ou pas de candidats) : {e}")
-        sys.exit(0)
+        print(f"Résultat : {e}")
+    else:
+        print(f"Sujet sélectionné : {result['sujet_titre']}")
 
-    print(f"Sujet sélectionné :")
-    print(f"  ID     : {result['sujet_id']}")
-    print(f"  Titre  : {result['sujet_titre']}")
-    print(f"  Source : {result['sujet_source']}")
-    print()
-
-    # Vérifie que le sujet traité n'a pas été sélectionné
+    # Nettoyage
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT titre, statut FROM sujets ORDER BY id")
-    rows = c.fetchall()
-    conn.close()
-
-    print("État final de la base :")
-    for titre, statut in rows:
-        marker = "← SÉLECTIONNÉ" if statut == "sélectionné" else ""
-        print(f"  [{statut:12}] {titre[:70]} {marker}")
-
-    # Nettoyage sujet test
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("DELETE FROM sujets WHERE url_source = 'http://test.com'")
+    c.execute("DELETE FROM articles WHERE slug = 'test-anthropic-8b'")
     conn.commit()
     conn.close()
-    print("\n✓ Sujet test supprimé.")
+    print("\n✓ Article test supprimé.")
