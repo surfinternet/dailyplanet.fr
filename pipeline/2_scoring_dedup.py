@@ -6,15 +6,18 @@ Critères de score :
   - Chiffres concrets dans le titre (+5)
   - Pénalité titre trop court < 30 chars (-10)
 
-Dédup :
+Dédup (3 niveaux) :
   - Sujets statut='traité' jamais reconsidérés (filtre SQL)
   - Titres trop similaires à un 'traité' existant : ignorés (overlap > 60 %)
+  - Titres trop similaires aux articles publiés dans les 7 derniers jours (overlap > 35 %)
+  - Combo entité+événement identique dans un article publié dans les 48h : ignoré
 """
 
 import os
 import re
 import sys
 import sqlite3
+from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 
@@ -31,6 +34,26 @@ STOP_WORDS = {
     "le", "la", "les", "de", "du", "des", "un", "une", "et", "en",
     "à", "au", "aux", "sur", "par", "pour", "dans", "avec", "sans",
     "qui", "que", "est", "sont", "ses", "son", "sa",
+}
+
+# Entités : si même entité + même groupe d'événement trouvés dans un article < 48h → doublon
+ENTITIES = [
+    "anthropic", "openai", "google", "meta", "apple", "microsoft", "mistral",
+    "xai", "nvidia", "amazon", "aws", "deepseek", "grok", "chatgpt", "gemini",
+    "claude", "llama", "sora", "copilot", "hugging face", "cohere",
+]
+
+EVENT_GROUPS = {
+    "financement":   ["milliard", "million", "levée", "lève", "encaisse", "fonds",
+                      "investissement", "valorisation", "tour de table", "raises",
+                      "funding", "invest"],
+    "acquisition":   ["rachète", "acquiert", "acquisition", "fusion", "achat", "buys",
+                      "acquires", "merges"],
+    "licenciement":  ["licencie", "supprime", "postes", "emplois", "layoff", "cuts"],
+    "procès":        ["procès", "enquête", "amende", "condamné", "jugement",
+                      "lawsuit", "fine", "sued"],
+    "lancement":     ["lance", "dévoile", "annonce", "présente", "launches",
+                      "reveals", "announces"],
 }
 
 
@@ -55,21 +78,50 @@ def words(titre: str) -> set:
     return set(titre.lower().split()) - STOP_WORDS
 
 
-def too_similar(titre_a: str, titre_b: str) -> bool:
+def too_similar(titre_a: str, titre_b: str, threshold: float = 0.6) -> bool:
     wa, wb = words(titre_a), words(titre_b)
     if not wa or not wb:
         return False
     overlap = len(wa & wb) / min(len(wa), len(wb))
-    return overlap > 0.6
+    return overlap > threshold
+
+
+def entity_event_combo(titre: str) -> set:
+    """Return set of (entity, event_group) tuples found in title."""
+    t = titre.lower()
+    combos = set()
+    for entity in ENTITIES:
+        if entity in t:
+            for group_name, keywords in EVENT_GROUPS.items():
+                if any(kw in t for kw in keywords):
+                    combos.add((entity, group_name))
+    return combos
 
 
 def run(context: dict) -> dict:
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Tous les sujets déjà traités → référence pour dédup
+    # Tous les sujets déjà traités → référence pour dédup (overlap > 60%)
     c.execute("SELECT titre FROM sujets WHERE statut = 'traité'")
     traites = [r[0] for r in c.fetchall()]
+
+    # Articles publiés dans les 7 derniers jours → dédup élargi (overlap > 35%)
+    cutoff_7d = (datetime.utcnow() - timedelta(days=7)).isoformat()
+    c.execute(
+        "SELECT titre_final FROM articles WHERE date_creation > ?", (cutoff_7d,)
+    )
+    articles_recents = [r[0] for r in c.fetchall() if r[0]]
+
+    # Articles publiés dans les 48h → dédup entité+événement
+    cutoff_48h = (datetime.utcnow() - timedelta(hours=48)).isoformat()
+    c.execute(
+        "SELECT titre_final FROM articles WHERE date_creation > ?", (cutoff_48h,)
+    )
+    articles_48h = [r[0] for r in c.fetchall() if r[0]]
+    combos_48h = set()
+    for t in articles_48h:
+        combos_48h.update(entity_event_combo(t))
 
     # Candidats : statut='trouvé' uniquement
     c.execute(
@@ -84,15 +136,25 @@ def run(context: dict) -> dict:
             "Lance d'abord : python pipeline/1_recherche_sujets.py"
         )
 
-    # Score + filtre doublons sémantiques
+    # Score + filtre doublons (3 niveaux)
     scores = []
     for sujet_id, titre, source, url in candidats:
-        # Ignorer si trop similaire à un sujet déjà traité
-        if any(too_similar(titre, t) for t in traites):
-            c.execute(
-                "UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,)
-            )
+        # Niveau 1 : overlap > 60% avec sujets traités
+        if any(too_similar(titre, t, threshold=0.6) for t in traites):
+            c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
             continue
+
+        # Niveau 2 : overlap > 35% avec articles récents (7j)
+        if any(too_similar(titre, t, threshold=0.35) for t in articles_recents):
+            c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
+            continue
+
+        # Niveau 3 : combo entité+événement identique dans les 48h
+        candidate_combos = entity_event_combo(titre)
+        if candidate_combos & combos_48h:
+            c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
+            continue
+
         scores.append((score_titre(titre), sujet_id, titre, source, url))
 
     conn.commit()
