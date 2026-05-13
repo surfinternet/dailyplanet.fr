@@ -201,7 +201,12 @@ def run(context: dict) -> dict:
 
     titre = extract_title(contenu)
     if not titre:
-        raise ValueError("Article généré sans titre (ligne '# ...' introuvable).")
+        # Debug: show first 300 chars to diagnose the format issue
+        preview = repr(contenu[:300]) if contenu else "(vide)"
+        raise ValueError(
+            f"Article généré sans titre (ligne '# ...' introuvable).\n"
+            f"Début du contenu reçu : {preview}"
+        )
 
     slug = slugify(titre)
     article_id = save_to_db(sujet_id, titre, slug, contenu)
