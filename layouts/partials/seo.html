@@ -72,20 +72,28 @@
 {{- if $isArticle -}}
 {{- $authorSchema := dict "@type" "Person" "name" (.Params.author | default .Site.Params.author) "jobTitle" (.Params.author_role | default "") -}}
 {{- $sameAs := slice -}}
-{{- with .Params.author_url }}{{- $sameAs = $sameAs | append (absURL .) }}{{- end }}
+{{- with .Params.author_url }}
+  {{- $authorSchema = merge $authorSchema (dict "url" (absURL .)) -}}
+  {{- $sameAs = $sameAs | append (absURL .) -}}
+{{- end }}
 {{- with .Params.author_linkedin }}{{- $sameAs = $sameAs | append . }}{{- end }}
 {{- with .Params.author_x }}{{- $sameAs = $sameAs | append . }}{{- end }}
 {{- if $sameAs }}{{- $authorSchema = merge $authorSchema (dict "sameAs" $sameAs) }}{{- end }}
+{{- $publisherSchema := dict "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL -}}
+{{- with .Site.Params.publisher_logo_url -}}
+  {{- $publisherSchema = merge $publisherSchema (dict "logo" (dict "@type" "ImageObject" "url" . "width" 400 "height" 400)) -}}
+{{- end -}}
 {{- $schema := dict
   "@context" "https://schema.org"
   "@type"    "NewsArticle"
   "headline"      .Title
   "description"   $desc
   "url"           $url
+  "mainEntityOfPage" (dict "@type" "WebPage" "@id" $url)
   "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")
   "dateModified"  (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
   "author"    $authorSchema
-  "publisher" (dict "@type" "Organization" "name" .Site.Title "url" .Site.BaseURL)
+  "publisher" $publisherSchema
 -}}
 {{- if $ogImgURL -}}
   {{- $schema = merge $schema (dict "image" (slice $ogImgURL)) -}}

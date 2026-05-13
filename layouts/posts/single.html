@@ -4,6 +4,13 @@
 
 {{ define "main" }}
 <div class="article-wrapper">
+  <nav class="breadcrumb" aria-label="Fil d'Ariane">
+    <a href="{{ .Site.BaseURL }}">Accueil</a>
+    <span class="breadcrumb-sep">›</span>
+    <a href="{{ .CurrentSection.Permalink }}">{{ .CurrentSection.Title }}</a>
+    <span class="breadcrumb-sep">›</span>
+    <span class="current">{{ .Params.category | default .CurrentSection.Title }}</span>
+  </nav>
   <header class="article-header">
     <div class="article-category">
       <span class="tag filled">{{ .Params.category }}</span>
