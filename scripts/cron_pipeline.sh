@@ -31,6 +31,7 @@ log "RUN START"
 log "════════════════════════════════════════════"
 
 cd /app
+git config --global --add safe.directory /app
 
 # Step 1: Sync latest layouts/templates from main (Mac dev work)
 log "Git: récupération des derniers templates depuis main..."
