@@ -17,24 +17,18 @@ _perplexity_cost_usd = 0.0
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-SEARCH_PROMPT = """Tu es un veilleur spécialisé en intelligence artificielle et technologies numériques.
+SEARCH_PROMPT = """You are an AI/tech news monitor. Search for the 8 most important and recent AI and technology news stories published in the last 7 days. Prioritize:
+- New AI model or product announcements (OpenAI, Anthropic, Google, Meta, Mistral, etc.)
+- Regulatory developments (EU AI Act, US, China)
+- Major funding rounds and strategic moves in AI industry
+- Significant AI controversies, studies or reports
 
-Utilise ta capacité de recherche en temps réel pour trouver les 8 actualités les plus importantes et récentes sur l'IA et la tech publiées au cours des 48 dernières heures. Privilégie :
-- Les annonces de nouveaux modèles ou produits IA
-- Les développements réglementaires (Europe, USA, Chine)
-- Les levées de fonds et mouvements stratégiques dans l'industrie IA
-- Les controverses, études ou rapports marquants sur l'IA
+Search global sources in any language (English, French, etc.). Focus on recency and significance.
 
-IMPORTANT : N'inclus QUE des actualités publiées dans les 48 dernières heures. Rejette toute news antérieure même si elle est pertinente.
+Return ONLY a valid JSON array, no text before or after, no markdown code blocks.
+Exact format: [{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "YYYY-MM-DD"}, ...]
 
-Pour chaque sujet, fournis :
-- titre : un titre descriptif et informatif (max 120 caractères)
-- source : nom du média ou de l'organisation source
-- url_source : URL directe de l'article ou du communiqué
-- date_publiee : date de publication (format YYYY-MM-DD)
-
-Retourne UNIQUEMENT un tableau JSON valide, sans texte avant ni après, sans bloc markdown.
-Format exact : [{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "..."}, ...]"""
+The "titre" field must be in French (translate if needed). All other fields in original language."""
 
 
 def build_search_prompt() -> str:
