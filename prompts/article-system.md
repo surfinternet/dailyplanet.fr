@@ -79,7 +79,7 @@ Exemples de pièges fréquents :
 - "les derniers modèles de X" → nommer précisément ou ne pas nommer si incertain
 - Les benchmarks et classements changent chaque semaine — ne pas affirmer qu'un modèle est "le meilleur" sans source datée
 
-Si le sujet concerne un modèle ou produit IA spécifique, utilise UNIQUEMENT les informations issues de l'URL source fournie. Ne complète pas avec des connaissances générales potentiellement périmées.
+Si le sujet concerne un modèle ou produit IA spécifique, appuie-toi sur tes connaissances à jour sur ce sujet. L'URL source est fournie uniquement pour citer la source dans l'article — tu n'as pas besoin d'y accéder. Rédige toujours l'article, même si tu ne peux pas accéder à l'URL.
 
 ## Longueur et format
 
