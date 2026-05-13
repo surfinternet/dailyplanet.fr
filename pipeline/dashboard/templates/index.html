@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Pipeline — Daily Planet FR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #FAFAF7;
+      --card:   #FFFFFF;
+      --fg:     #0A0A0A;
+      --accent: #BE1C28;
+      --muted:  #5A5558;
+      --border: #E5E0D8;
+      --ok:     #15803d;
+      --ok-bg:  #f0fdf4;
+      --err:    #BE1C28;
+      --err-bg: #fff1f1;
+      --run:    #b45309;
+      --run-bg: #fffbeb;
+      --pend:   #9ca3af;
+      --pend-bg:#f9fafb;
+      --mono:   'DM Mono', 'Courier New', monospace;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--card);
+      border-bottom: 3px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .header-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--fg);
+      letter-spacing: -0.3px;
+    }
+    .header-logo span { color: var(--accent); }
+    .header-subtitle {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .refresh-info {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.3;
+    }
+    .btn-refresh {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      background: none;
+      border: 1.5px solid var(--accent);
+      border-radius: 4px;
+      padding: 5px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-refresh:hover { background: var(--err-bg); }
+
+    /* ── Main ── */
+    .main { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 580px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--fg);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Section header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .runs-count { font-size: 11px; color: var(--muted); }
+
+    /* ── Run cards ── */
+    .run-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .run-card:hover { border-color: #c5bdb4; }
+
+    .run-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .run-header:hover .run-title { color: var(--accent); }
+
+    .status-badge {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .status-badge.ok  { background: var(--ok-bg);  color: var(--ok); }
+    .status-badge.err { background: var(--err-bg); color: var(--err); }
+    .status-badge.run { background: var(--run-bg); color: var(--run); }
+    .status-badge.pend { background: var(--pend-bg); color: var(--pend); }
+
+    .run-meta-left { flex: 1; min-width: 0; }
+    .run-date { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+    .run-title {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s;
+    }
+    .run-title.no-article { color: var(--muted); font-style: italic; }
+
+    .run-meta-right {
+      flex-shrink: 0;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .run-cost { font-size: 13px; font-weight: 600; color: var(--fg); }
+    .run-duration { font-size: 11px; color: var(--muted); }
+
+    .chevron {
+      flex-shrink: 0;
+      color: var(--muted);
+      font-size: 11px;
+      transition: transform 0.2s;
+    }
+    .run-card.open .chevron { transform: rotate(180deg); }
+
+    /* ── Run detail ── */
+    .run-detail {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+    .run-card.open .run-detail { display: block; }
+
+    .detail-inner { padding: 16px; display: grid; gap: 20px; }
+
+    /* Steps */
+    .detail-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .steps-list { display: flex; flex-direction: column; gap: 6px; }
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--bg);
+    }
+    .step-icon {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+    .step-icon.ok   { background: var(--ok-bg);  color: var(--ok); }
+    .step-icon.err  { background: var(--err-bg); color: var(--err); }
+    .step-icon.run  { background: var(--run-bg); color: var(--run); }
+    .step-icon.pend { background: var(--pend-bg); color: var(--pend); }
+
+    .step-body { flex: 1; min-width: 0; }
+    .step-label { font-size: 13px; font-weight: 500; }
+    .step-label.err { color: var(--err); }
+
+    .step-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .step-error {
+      margin-top: 8px;
+      background: #fff;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .step-error-toggle {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 7px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--err);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .step-error-toggle:hover { background: var(--err-bg); }
+    .step-error-body {
+      display: none;
+      padding: 8px 10px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border-top: 1px solid #fecaca;
+      background: #fafafa;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .step-error.open .step-error-body { display: block; }
+    .step-error.open .step-error-toggle-chevron { transform: rotate(180deg); }
+    .step-error-toggle-chevron { display: inline-block; transition: transform 0.15s; }
+
+    /* Costs */
+    .cost-table { width: 100%; border-collapse: collapse; }
+    .cost-table td { padding: 5px 0; font-size: 13px; }
+    .cost-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .cost-table .cost-service { color: var(--muted); }
+    .cost-table .cost-divider td { border-top: 1px solid var(--border); padding-top: 8px; }
+    .cost-table .cost-total td { font-weight: 700; font-size: 14px; }
+
+    /* Git note */
+    .git-note {
+      font-size: 11px;
+      color: var(--ok);
+      padding: 6px 10px;
+      background: var(--ok-bg);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state-text { font-size: 14px; }
+
+    /* Auto-refresh bar */
+    .refresh-bar {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--muted);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="header-logo">Daily<span>Planet</span></span>
+      <span class="header-subtitle">Pipeline Dashboard</span>
+    </div>
+    <div class="header-right">
+      <div class="refresh-info">
+        Mis à jour : {{ now }}<br>
+        <span id="refresh-countdown"></span>
+      </div>
+      <button class="btn-refresh" onclick="location.reload()">↻ Actualiser</button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.runs_today }}</div>
+      <div class="stat-label">Runs aujourd'hui</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.success_rate }}<small style="font-size:14px">%</small></div>
+      <div class="stat-label">Taux de succès</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${{ "%.3f"|format(stats.cost_today) }}</div>
+      <div class="stat-label">Coût aujourd'hui</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats.articles_today }}</div>
+      <div class="stat-label">Articles publiés</div>
+    </div>
+  </div>
+
+  <!-- Run list -->
+  <div class="section-header">
+    <span class="section-title">Historique des runs</span>
+    <span class="runs-count">{{ runs|length }} dernier{% if runs|length > 1 %}s{% endif %}</span>
+  </div>
+
+  {% if not runs %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <div class="empty-state-text">Aucun run enregistré.<br>Le pipeline tourne-t-il correctement sur le VPS ?</div>
+  </div>
+  {% endif %}
+
+  {% for run in runs %}
+  {% set rid = run.run_id %}
+  {% set status = run.status %}
+
+  {% if status == "success" %}
+    {% set badge_class = "ok" %}
+    {% set badge_icon = "✓" %}
+  {% elif status in ["failed", "git_failed"] %}
+    {% set badge_class = "err" %}
+    {% set badge_icon = "✗" %}
+  {% elif status == "running" %}
+    {% set badge_class = "run" %}
+    {% set badge_icon = "⏳" %}
+  {% elif status == "no_content" %}
+    {% set badge_class = "pend" %}
+    {% set badge_icon = "—" %}
+  {% else %}
+    {% set badge_class = "pend" %}
+    {% set badge_icon = "?" %}
+  {% endif %}
+
+  <div class="run-card" id="card-{{ rid }}">
+    <div class="run-header" onclick="toggleRun('{{ rid }}')">
+      <div class="status-badge {{ badge_class }}">{{ badge_icon }}</div>
+
+      <div class="run-meta-left">
+        <div class="run-date">{{ run._date }}</div>
+        {% if run.article_titre %}
+          <div class="run-title">{{ run.article_titre }}</div>
+        {% elif status == "no_content" %}
+          <div class="run-title no-article">Aucun nouveau contenu</div>
+        {% elif status in ["failed", "git_failed"] %}
+          <div class="run-title no-article">
+            {% set failed_step = run.steps | selectattr("status", "eq", "failed") | first %}
+            {% if failed_step %}Échec — {{ failed_step.label }}{% else %}Échec du pipeline{% endif %}
+          </div>
+        {% elif status == "running" %}
+          <div class="run-title no-article">En cours…</div>
+        {% else %}
+          <div class="run-title no-article">{{ status }}</div>
+        {% endif %}
+      </div>
+
+      <div class="run-meta-right">
+        {% if run.costs.total_usd > 0 %}
+          <span class="run-cost">${{ "%.4f"|format(run.costs.total_usd) }}</span>
+        {% else %}
+          <span class="run-cost" style="color:var(--muted)">—</span>
+        {% endif %}
+        <span class="run-duration">{{ run._duration }}</span>
+      </div>
+
+      <span class="chevron">▼</span>
+    </div>
+
+    <div class="run-detail">
+      <div class="detail-inner">
+
+        <!-- Steps -->
+        <div>
+          <div class="detail-section-title">Étapes du pipeline</div>
+          <div class="steps-list">
+            {% for step in run.steps %}
+            {% if step.status == "ok" %}
+              {% set sicon = "ok" %} {% set smark = "✓" %}
+            {% elif step.status == "failed" %}
+              {% set sicon = "err" %} {% set smark = "✗" %}
+            {% elif step.status == "running" %}
+              {% set sicon = "run" %} {% set smark = "⏳" %}
+            {% else %}
+              {% set sicon = "pend" %} {% set smark = "·" %}
+            {% endif %}
+
+            <div class="step-row">
+              <div class="step-icon {{ sicon }}">{{ smark }}</div>
+              <div class="step-body">
+                <div class="step-label {% if step.status == 'failed' %}err{% endif %}">{{ step.label }}</div>
+                <div class="step-meta">
+                  {% if step.duration_s is not none %}{{ step.duration_s }}s{% endif %}
+                  {% if step.started_at %} · {{ step.started_at[11:16] }}{% endif %}
+                </div>
+                {% if step.error %}
+                <div class="step-error" id="err-{{ rid }}-{{ loop.index }}">
+                  <button class="step-error-toggle" onclick="toggleError('{{ rid }}-{{ loop.index }}', event)">
+                    <span class="step-error-toggle-chevron">▶</span> Voir le détail de l'erreur
+                  </button>
+                  <pre class="step-error-body">{{ step.error }}</pre>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Costs -->
+        <div>
+          <div class="detail-section-title">Détail des coûts</div>
+          <table class="cost-table">
+            <tr>
+              <td class="cost-service">Perplexity (sonar-pro)</td>
+              <td>${{ "%.4f"|format(run.costs.perplexity_usd) }}</td>
+            </tr>
+            <tr>
+              <td class="cost-service">Claude (via OpenRouter)</td>
+              <td>${{ "%.4f"|format(run.costs.claude_usd) }}</td>
+            </tr>
+            <tr>
+              <td class="cost-service">Image (kie.ai)</td>
+              <td>${{ "%.4f"|format(run.costs.image_usd) }}</td>
+            </tr>
+            <tr class="cost-divider">
+              <td></td><td></td>
+            </tr>
+            <tr class="cost-total">
+              <td>Total ce CRON</td>
+              <td>${{ "%.4f"|format(run.costs.total_usd) }}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Git note -->
+        {% if run.git_note %}
+        <div class="git-note">✓ {{ run.git_note }}</div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</main>
+
+<div class="refresh-bar" id="refresh-bar">
+  Actualisation auto dans <strong id="countdown">60</strong>s
+</div>
+
+<script>
+  function toggleRun(rid) {
+    const card = document.getElementById('card-' + rid);
+    card.classList.toggle('open');
+  }
+
+  function toggleError(id, e) {
+    e.stopPropagation();
+    const el = document.getElementById('err-' + id);
+    el.classList.toggle('open');
+  }
+
+  // Auto-refresh countdown
+  let secs = 60;
+  const countEl = document.getElementById('countdown');
+  const timer = setInterval(() => {
+    secs--;
+    if (countEl) countEl.textContent = secs;
+    if (secs <= 0) { clearInterval(timer); location.reload(); }
+  }, 1000);
+</script>
+
+</body>
+</html>

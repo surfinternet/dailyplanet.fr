@@ -9,6 +9,11 @@ import sqlite3
 import requests
 from datetime import datetime, timezone, timedelta
 
+sys.path.insert(0, os.path.dirname(__file__))
+from cost import usage_cost
+
+_perplexity_cost_usd = 0.0
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -53,7 +58,10 @@ def call_perplexity(api_key: str) -> list:
     response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
     response.raise_for_status()
 
-    content = response.json()["choices"][0]["message"]["content"].strip()
+    global _perplexity_cost_usd
+    resp_data = response.json()
+    _perplexity_cost_usd += usage_cost("perplexity/sonar-pro", resp_data.get("usage", {}))
+    content = resp_data["choices"][0]["message"]["content"].strip()
 
     # Strip markdown code blocks if Perplexity wraps the JSON
     if content.startswith("```"):
@@ -118,6 +126,9 @@ def recycle_ignored(conn: sqlite3.Connection) -> int:
 
 
 def run(context: dict) -> dict:
+    global _perplexity_cost_usd
+    _perplexity_cost_usd = 0.0
+
     api_key = os.getenv("OPENROUTER_API_KEY", "")
     if not api_key or api_key.startswith("sk-or-remplacez"):
         raise ValueError("OPENROUTER_API_KEY manquante ou non configurée dans .env")
@@ -137,7 +148,11 @@ def run(context: dict) -> dict:
             )
         print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) 'ignoré' recyclé(s) vers 'trouvé'")
 
-    return {"nb_sujets_trouves": nb_saved, "_sujets_raw": sujets}
+    return {
+        "nb_sujets_trouves": nb_saved,
+        "_sujets_raw": sujets,
+        "_cost_perplexity_usd": _perplexity_cost_usd,
+    }
 
 
 # ── Test direct ───────────────────────────────────────────────────────────────
