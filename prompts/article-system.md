@@ -56,16 +56,38 @@ Ces patterns trahissent un texte généré. Leur présence est un échec.
 
 ## Titre
 
-- Forme : verbe d'action + tension ou paradoxe apparent
+- Forme : sujet concret (entreprise, pays, produit, personne) + verbe d'action + tension ou contraste
 - Longueur : 60 à 80 caractères
 - Pas de question directe, pas de ":" suivi d'un sous-titre, pas de guillemets
 - Le titre donne envie de lire, il ne résume pas
+
+**Règle absolue — le sujet doit être concret :**
+Le sujet grammatical du verbe principal doit toujours désigner une entité réelle et identifiable : une entreprise (OpenAI, Google), un pays (La Chine, L'Europe), une personne, un produit. Jamais un concept abstrait seul ("l'IA", "les chiffres", "les promesses", "la réalité", "le marché").
+
+**Test obligatoire avant de valider le titre :**
+Lis-le à voix haute. Est-ce qu'un Français natif le comprendrait immédiatement et sans effort ? Si la moindre hésitation, reformule.
 
 **Exemples de bons titres :**
 - "OpenAI mise sur les agents et perd peut-être le contrôle"
 - "La Chine construit l'IA que l'Europe interdit"
 - "Google prédit vos clics, les annonceurs regardent ailleurs"
 - "Mistral parle fort, les investisseurs écoutent en silence"
+- "Anthropic lève 40 milliards et reste dépendante de ses rivaux"
+
+**Exemples interdits (à ne jamais reproduire) :**
+- "L'IA détruit des emplois tech, les chiffres arrêtent de mentir" → ❌ "les chiffres" ne peuvent pas "mentir" ou "arrêter de mentir"
+- "L'IA s'installe dans les entreprises, les promesses attendent la preuve" → ❌ "les promesses" n'attendent rien
+- "Entre stratégie affichée et transformation réelle, les freins restent solides" → ❌ aucun sujet concret, phrase creuse
+
+## Intégrité des données
+
+Les faits et chiffres fournis dans la recherche sont vérifiés et récents. Règles strictes :
+
+- **Utilise les données fournies** comme socle factuel de l'article
+- **N'invente jamais** de statistiques, pourcentages ou chiffres absents de la recherche fournie
+- **Date explicitement** toute donnée chiffrée ("en mai 2026", "au premier trimestre 2026", etc.)
+- **Si une donnée manque**, écris autour sans l'inventer — préfère "selon [source]" ou une formulation approximative sourcée
+- **Ne jamais citer** des études, rapports ou chiffres génériques sans source précise et date récente
 
 ## Contexte temporel et références techniques
 

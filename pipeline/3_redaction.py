@@ -16,7 +16,7 @@ import sqlite3
 import unicodedata
 import subprocess
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(__file__))
 from cost import usage_cost
@@ -126,15 +126,106 @@ def llm_call(system: str, user: str) -> str:
         return call_openrouter(system, user)
 
 
+DEEP_RESEARCH_PROMPT = """\
+Nous sommes le {date_today}. Tu es un journaliste qui prépare un article sur le sujet suivant :
+
+Sujet : {sujet_titre}
+Source principale : {sujet_source}
+URL : {sujet_url}
+
+Effectue une recherche approfondie et retourne UNIQUEMENT un bloc de faits structuré en français contenant :
+- Les chiffres clés précis avec leur date (ex: "40 milliards de dollars investis en mai 2026")
+- Les citations directes des personnes impliquées (avec nom, fonction, date)
+- Le contexte récent : événements des 3 derniers mois qui éclairent ce sujet
+- Les acteurs principaux concernés et leur rôle
+- Les enjeux concrets pour la France et l'Europe si pertinent
+
+Format : texte structuré en 4-6 paragraphes courts. Pas de titres, pas de listes à puces. Chaque fait doit être daté ou sourcé.
+Si un chiffre ou fait n'est pas confirmé par tes sources, ne l'invente pas — omets-le."""
+
+
+# ── Appel Perplexity pour recherche approfondie ───────────────────────────────
+
+def recherche_approfondie(sujet_titre: str, sujet_source: str, sujet_url: str) -> str:
+    api_key = os.getenv("OPENROUTER_API_KEY", "")
+    if not api_key or api_key.startswith("sk-or-remplacez"):
+        return ""
+
+    date_today = datetime.now(timezone.utc).strftime("%d %B %Y")
+    prompt = DEEP_RESEARCH_PROMPT.format(
+        date_today=date_today,
+        sujet_titre=sujet_titre,
+        sujet_source=sujet_source,
+        sujet_url=sujet_url,
+    )
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://dailyplanet.fr",
+    }
+    payload = {
+        "model": "perplexity/sonar-pro",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 800,
+    }
+
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
+        response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"].strip()
+        global _claude_cost_usd
+        from cost import usage_cost
+        _claude_cost_usd += usage_cost("perplexity/sonar-pro", response.json().get("usage", {}))
+        return content
+    except Exception as e:
+        print(f"  ⚠ Recherche approfondie Perplexity échouée : {e}")
+        return ""
+
+
 # ── Logique métier ────────────────────────────────────────────────────────────
 
-def rediger(sujet_titre: str, sujet_source: str, sujet_url: str) -> str:
+def rediger(sujet_titre: str, sujet_source: str, sujet_url: str, sujet_resume: str = "") -> str:
     system = load_system_prompt()
+    date_today = datetime.now(timezone.utc).strftime("%d %B %Y")
+
+    # Recherche approfondie via Perplexity (mode production uniquement — CLI n'a pas accès API)
+    mode = os.getenv("MODE", "local")
+    recherche = ""
+    if mode != "local":
+        print("  → Recherche approfondie Perplexity en cours...", flush=True)
+        recherche = recherche_approfondie(sujet_titre, sujet_source, sujet_url)
+        if recherche:
+            print(f"  ✓ Recherche obtenue ({len(recherche)} caractères)", flush=True)
+
+    # Construire le bloc de faits disponibles
+    faits_blocs = []
+    if sujet_resume:
+        faits_blocs.append(f"Résumé initial (Perplexity, étape 1) :\n{sujet_resume}")
+    if recherche:
+        faits_blocs.append(f"Recherche approfondie (Perplexity, {date_today}) :\n{recherche}")
+
+    faits_section = ""
+    if faits_blocs:
+        faits_section = (
+            "\n\nFAITS VÉRIFIÉS POUR CET ARTICLE :\n"
+            + "\n\n".join(faits_blocs)
+            + "\n\nCes faits sont vérifiés et récents. Appuie-toi dessus. "
+            "N'invente pas de statistiques absentes de cette recherche."
+        )
+
     user = (
+        f"Date du jour : {date_today}\n"
         f"Sujet : {sujet_titre}\n"
         f"Source : {sujet_source}\n"
-        f"URL de référence (pour citation uniquement, pas besoin d'y accéder) : {sujet_url}\n\n"
-        "Rédige l'article complet selon les instructions en utilisant tes connaissances sur ce sujet. "
+        f"URL de référence : {sujet_url}"
+        f"{faits_section}\n\n"
+        "Rédige l'article complet selon les instructions. "
         "Commence immédiatement par la ligne `# Titre de l'article`."
     )
     return llm_call(system, user)
@@ -189,11 +280,12 @@ def run(context: dict) -> dict:
     sujet_titre  = context.get("sujet_titre", "")
     sujet_source = context.get("sujet_source", "")
     sujet_url    = context.get("sujet_url", "")
+    sujet_resume = context.get("sujet_resume", "")
 
     if not sujet_titre:
         raise ValueError("Aucun sujet_titre dans le contexte. Étape 2 a-t-elle tourné ?")
 
-    contenu = rediger(sujet_titre, sujet_source, sujet_url)
+    contenu = rediger(sujet_titre, sujet_source, sujet_url, sujet_resume)
     contenu = antifoot_pass(contenu)
 
     titre = extract_title(contenu)
