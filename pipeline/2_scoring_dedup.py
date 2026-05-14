@@ -132,7 +132,7 @@ def run(context: dict) -> dict:
 
     # Candidats : statut='trouvé' uniquement (les 'traité' sont déjà exclus par SQL)
     c.execute(
-        "SELECT id, titre, source, url_source FROM sujets WHERE statut = 'trouvé'"
+        "SELECT id, titre, source, url_source, resume FROM sujets WHERE statut = 'trouvé'"
     )
     candidats = c.fetchall()
 
@@ -151,16 +151,17 @@ def run(context: dict) -> dict:
     )
     articles_recents = [r[0] for r in c.fetchall() if r[0]]
 
-    # Analyse LLM : détecte les doublons sémantiques
-    duplicates = llm_dedup(candidats, articles_recents)
+    # Analyse LLM : détecte les doublons sémantiques (passe seulement id/titre/source/url)
+    candidats_dedup = [(sid, titre, source, url) for sid, titre, source, url, resume in candidats]
+    duplicates = llm_dedup(candidats_dedup, articles_recents)
 
     # Filtre + scoring
     scores = []
-    for sujet_id, titre, source, url in candidats:
+    for sujet_id, titre, source, url, resume in candidats:
         if duplicates.get(sujet_id, False):
             c.execute("UPDATE sujets SET statut = 'ignoré' WHERE id = ?", (sujet_id,))
             continue
-        scores.append((score_titre(titre), sujet_id, titre, source, url))
+        scores.append((score_titre(titre), sujet_id, titre, source, url, resume))
 
     conn.commit()
 
@@ -172,7 +173,7 @@ def run(context: dict) -> dict:
 
     # Meilleur score
     scores.sort(reverse=True)
-    _, best_id, best_titre, best_source, best_url = scores[0]
+    _, best_id, best_titre, best_source, best_url, best_resume = scores[0]
 
     c.execute("UPDATE sujets SET statut = 'sélectionné' WHERE id = ?", (best_id,))
     for _, sid, *_ in scores[1:]:
@@ -186,6 +187,7 @@ def run(context: dict) -> dict:
         "sujet_titre":  best_titre,
         "sujet_source": best_source,
         "sujet_url":    best_url,
+        "sujet_resume": best_resume or "",
     }
 
 

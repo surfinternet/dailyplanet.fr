@@ -17,22 +17,26 @@ _perplexity_cost_usd = 0.0
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-SEARCH_PROMPT = """You are an AI/tech news monitor. Search for the 8 most important and recent AI and technology news stories published in the last 7 days. Prioritize:
-- New AI model or product announcements (OpenAI, Anthropic, Google, Meta, Mistral, etc.)
-- Regulatory developments (EU AI Act, US, China)
-- Major funding rounds and strategic moves in AI industry
-- Significant AI controversies, studies or reports
+SEARCH_PROMPT = """Tu es un moniteur d'actualités IA/tech. Nous sommes le {date_today}. Recherche les 8 actualités les plus importantes et récentes sur l'IA et la technologie publiées dans les 7 derniers jours. Priorité :
+- Nouvelles annonces de modèles ou produits IA (OpenAI, Anthropic, Google, Meta, Mistral, etc.)
+- Développements réglementaires (EU AI Act, US, Chine)
+- Levées de fonds et mouvements stratégiques majeurs dans l'IA
+- Controverses, études ou rapports IA significatifs
 
-Search global sources in any language (English, French, etc.). Focus on recency and significance.
+Sources globales (anglais, français, etc.). Focus sur la récence et l'importance.
 
-Return ONLY a valid JSON array, no text before or after, no markdown code blocks.
-Exact format: [{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "YYYY-MM-DD"}, ...]
+Pour chaque actualité, fournis un résumé factuel de 2-3 phrases avec les faits clés (chiffres précis, dates exactes, acteurs nommés), tirés directement des sources publiées.
 
-The "titre" field must be in French (translate if needed). All other fields in original language."""
+Retourne UNIQUEMENT un tableau JSON valide, sans texte avant/après, sans blocs markdown.
+Format exact : [{{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "YYYY-MM-DD", "resume": "Résumé factuel 2-3 phrases avec chiffres et dates précis."}}, ...]
+
+Le champ "titre" et le champ "resume" doivent être en français."""
 
 
 def build_search_prompt() -> str:
-    return SEARCH_PROMPT
+    from datetime import datetime, timezone
+    date_today = datetime.now(timezone.utc).strftime("%d %B %Y")
+    return SEARCH_PROMPT.format(date_today=date_today)
 
 
 def call_perplexity(api_key: str) -> list:
@@ -83,6 +87,7 @@ def save_to_db(sujets: list) -> int:
         titre = (s.get("titre") or "").strip()
         url   = (s.get("url_source") or "").strip()
         source = (s.get("source") or "").strip()
+        resume = (s.get("resume") or "").strip()
 
         if not titre:
             continue
@@ -94,9 +99,9 @@ def save_to_db(sujets: list) -> int:
                 continue
 
         c.execute(
-            """INSERT INTO sujets (titre, source, url_source, score, date_trouve, statut)
-               VALUES (?, ?, ?, 0, ?, 'trouvé')""",
-            (titre, source, url, date_today),
+            """INSERT INTO sujets (titre, source, url_source, resume, score, date_trouve, statut)
+               VALUES (?, ?, ?, ?, 0, ?, 'trouvé')""",
+            (titre, source, url, resume, date_today),
         )
         saved += 1
 

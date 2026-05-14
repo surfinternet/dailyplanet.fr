@@ -23,6 +23,7 @@ def init_db():
             titre       TEXT NOT NULL,
             source      TEXT,
             url_source  TEXT,
+            resume      TEXT,
             score       REAL DEFAULT 0,
             date_trouve TEXT NOT NULL,
             statut      TEXT NOT NULL DEFAULT 'trouvé'
