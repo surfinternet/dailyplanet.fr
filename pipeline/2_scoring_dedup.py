@@ -103,7 +103,7 @@ def llm_dedup(candidats: list, articles_recents: list) -> dict:
         payload = {
             "model": os.getenv("CLAUDE_MODEL", "anthropic/claude-sonnet-4-6"),
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 500,
+            "max_tokens": 1500,
         }
         r = requests.post(
             f"{OPENROUTER_URL}/chat/completions",
