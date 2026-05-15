@@ -1,79 +1,87 @@
 """
-Étape 1 — Recherche des sujets d'actualité IA/tech via OpenRouter/Perplexity
+Étape 1 — Recherche des sujets d'actualité IA/tech via flux RSS
 """
 
 import os
+import re
 import sys
-import json
 import sqlite3
-import requests
+import feedparser
 from datetime import datetime, timezone, timedelta
-
-sys.path.insert(0, os.path.dirname(__file__))
-from cost import usage_cost
-
-_perplexity_cost_usd = 0.0
+from calendar import timegm
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "dailyplanet.db")
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-SEARCH_PROMPT = """Tu es un moniteur d'actualités IA/tech. Nous sommes le {date_today}. Recherche les 8 actualités les plus importantes et récentes sur l'IA et la technologie publiées dans les 7 derniers jours. Priorité :
-- Nouvelles annonces de modèles ou produits IA (OpenAI, Anthropic, Google, Meta, Mistral, etc.)
-- Développements réglementaires (EU AI Act, US, Chine)
-- Levées de fonds et mouvements stratégiques majeurs dans l'IA
-- Controverses, études ou rapports IA significatifs
+RSS_FEEDS = [
+    ("TechCrunch AI",   "https://techcrunch.com/category/artificial-intelligence/feed/"),
+    ("The Verge AI",    "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"),
+    ("VentureBeat AI",  "https://venturebeat.com/ai/feed/"),
+    ("Wired AI",        "https://www.wired.com/feed/tag/artificial-intelligence/latest/rss"),
+    ("Ars Technica",    "https://feeds.arstechnica.com/arstechnica/technology-lab"),
+    ("MIT Tech Review", "https://www.technologyreview.com/feed/"),
+]
 
-Sources globales (anglais, français, etc.). Focus sur la récence et l'importance.
-
-Pour chaque actualité, fournis un résumé factuel de 2-3 phrases avec les faits clés (chiffres précis, dates exactes, acteurs nommés), tirés directement des sources publiées.
-
-Retourne UNIQUEMENT un tableau JSON valide, sans texte avant/après, sans blocs markdown.
-Format exact : [{{"titre": "...", "source": "...", "url_source": "...", "date_publiee": "YYYY-MM-DD", "resume": "Résumé factuel 2-3 phrases avec chiffres et dates précis."}}, ...]
-
-Le champ "titre" et le champ "resume" doivent être en français."""
+MAX_ARTICLES = 15
 
 
-def build_search_prompt() -> str:
-    from datetime import datetime, timezone
-    date_today = datetime.now(timezone.utc).strftime("%d %B %Y")
-    return SEARCH_PROMPT.format(date_today=date_today)
+def _strip_html(text: str) -> str:
+    return re.sub(r"<[^>]+>", " ", text or "").strip()
 
 
-def call_perplexity(api_key: str) -> list:
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://dailyplanet.fr",
-    }
-    payload = {
-        "model": "perplexity/sonar-pro",
-        "messages": [{"role": "user", "content": build_search_prompt()}],
-    }
+def _entry_pub_datetime(entry):
+    t = getattr(entry, "published_parsed", None) or getattr(entry, "updated_parsed", None)
+    if t is None:
+        return None
+    return datetime.fromtimestamp(timegm(t), tz=timezone.utc)
 
-    response = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=60)
-    response.raise_for_status()
 
-    global _perplexity_cost_usd
-    resp_data = response.json()
-    _perplexity_cost_usd += usage_cost("perplexity/sonar-pro", resp_data.get("usage", {}))
-    content = resp_data["choices"][0]["message"]["content"].strip()
+def fetch_rss_articles(max_age_hours: int = 48) -> list:
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+    articles = []
+    seen_urls = set()
 
-    # Strip markdown code blocks if Perplexity wraps the JSON
-    if content.startswith("```"):
-        lines = content.splitlines()
-        content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+    for feed_name, feed_url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(feed_url, request_headers={"User-Agent": "DailyPlanetFR/1.0"})
+        except Exception as e:
+            print(f"  ⚠ Flux {feed_name} inaccessible : {e}")
+            continue
 
-    try:
-        sujets = json.loads(content)
-    except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Réponse non parseable en JSON : {e}\nContenu reçu : {content[:500]}"
-        )
+        for entry in feed.entries:
+            url = (entry.get("link") or "").strip()
+            if not url or url in seen_urls:
+                continue
 
-    if not isinstance(sujets, list):
-        raise ValueError(f"Attendu : liste JSON. Reçu : {type(sujets).__name__}")
+            pub_dt = _entry_pub_datetime(entry)
+            if pub_dt is None or pub_dt < cutoff:
+                continue
 
-    return sujets
+            titre = (entry.get("title") or "").strip()
+            if not titre:
+                continue
+
+            summary = _strip_html(entry.get("summary") or entry.get("description") or "")
+            # Tronquer le résumé à 500 chars
+            if len(summary) > 500:
+                summary = summary[:497] + "..."
+
+            articles.append({
+                "titre": titre,
+                "source": feed_name,
+                "url_source": url,
+                "resume": summary,
+                "date_publiee": pub_dt.strftime("%Y-%m-%d"),
+            })
+            seen_urls.add(url)
+
+    # Fallback : si trop peu de résultats, élargir à 72h
+    if len(articles) < 5 and max_age_hours < 72:
+        print(f"  ⚠ Seulement {len(articles)} article(s) sur {max_age_hours}h — élargissement à 72h")
+        return fetch_rss_articles(max_age_hours=72)
+
+    # Trier par date décroissante, limiter
+    articles.sort(key=lambda a: a["date_publiee"], reverse=True)
+    return articles[:MAX_ARTICLES]
 
 
 def save_to_db(sujets: list) -> int:
@@ -131,74 +139,59 @@ def recycle_treated(conn: sqlite3.Connection) -> int:
 
 
 def run(context: dict) -> dict:
-    global _perplexity_cost_usd
-    _perplexity_cost_usd = 0.0
-
-    api_key = os.getenv("OPENROUTER_API_KEY", "")
-    if not api_key or api_key.startswith("sk-or-remplacez"):
-        raise ValueError("OPENROUTER_API_KEY manquante ou non configurée dans .env")
-
-    sujets = call_perplexity(api_key)
+    sujets = fetch_rss_articles()
     nb_saved = save_to_db(sujets)
 
     if nb_saved == 0:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
 
-        # If 'trouvé' subjects already exist, no action needed — step 2 will pick one
         c.execute("SELECT COUNT(*) FROM sujets WHERE statut = 'trouvé'")
         already_available = c.fetchone()[0]
 
         if already_available > 0:
-            print(f"  ⚠ 0 nouveau sujet (doublons API) — {already_available} sujet(s) 'trouvé' déjà disponibles")
+            print(f"  ⚠ 0 nouveau sujet (doublons RSS) — {already_available} sujet(s) 'trouvé' déjà disponibles")
             conn.close()
         else:
             recycled = recycle_stale(conn)
             if recycled == 0:
-                # All subjects treated — recycle them so pipeline never stalls
                 recycled = recycle_treated(conn)
                 if recycled > 0:
                     print(f"  ⚠ DB épuisée — {recycled} sujet(s) 'traité' recyclé(s) vers 'trouvé'")
             else:
-                print(f"  ⚠ 0 nouveau sujet (doublons API) — {recycled} sujet(s) recyclé(s) vers 'trouvé'")
+                print(f"  ⚠ 0 nouveau sujet (doublons RSS) — {recycled} sujet(s) recyclé(s) vers 'trouvé'")
             conn.close()
             if recycled == 0:
                 raise RuntimeError(
                     "Base de données vide et aucun sujet récupérable. "
-                    "Vérifier la connexion à l'API Perplexity."
+                    "Vérifier la connectivité réseau (flux RSS inaccessibles)."
                 )
 
     return {
         "nb_sujets_trouves": nb_saved,
         "_sujets_raw": sujets,
-        "_cost_perplexity_usd": _perplexity_cost_usd,
+        "_cost_perplexity_usd": 0.0,  # plus d'API payante en step 1
     }
 
 
 # ── Test direct ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-
-    print("\nRecherche en cours (Perplexity/sonar-pro)...\n")
-
-    api_key = os.getenv("OPENROUTER_API_KEY", "")
-    if not api_key or api_key.startswith("sk-or-remplacez"):
-        print("Erreur : OPENROUTER_API_KEY manquante dans .env")
-        sys.exit(1)
+    print("\nRecherche en cours (flux RSS)...\n")
 
     try:
-        sujets = call_perplexity(api_key)
+        sujets = fetch_rss_articles()
     except Exception as e:
-        print(f"Erreur appel API : {e}")
+        print(f"Erreur : {e}")
         sys.exit(1)
 
-    print(f"{len(sujets)} sujet(s) trouvé(s) :\n")
+    print(f"{len(sujets)} article(s) trouvé(s) :\n")
     for i, s in enumerate(sujets, 1):
-        print(f"  {i}. {s.get('titre', '?')}")
-        print(f"     Source : {s.get('source', '?')}")
-        print(f"     URL    : {s.get('url_source', '?')}")
+        print(f"  {i}. [{s['date_publiee']}] {s['titre']}")
+        print(f"     Source : {s['source']}")
+        print(f"     URL    : {s['url_source']}")
         print()
 
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
     nb = save_to_db(sujets)
     print(f"✓ {nb} nouveau(x) sauvegardé(s) en base (doublons ignorés).")
