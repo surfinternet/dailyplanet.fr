@@ -3,9 +3,6 @@ SHELL=/bin/bash
 PATH=/usr/local/bin:/usr/bin:/bin
 MAILTO=""
 
-# Daily Planet FR — Pipeline 4x/jour (heures Paris, DST automatique)
+# Daily Planet FR — Pipeline 1x/jour à 08h00 (heure Paris, DST automatique)
 # m   h   dom  mon  dow  command
-0     7   *    *    *    /bin/bash /app/scripts/cron_pipeline.sh
-40   10   *    *    *    /bin/bash /app/scripts/cron_pipeline.sh
-15   14   *    *    *    /bin/bash /app/scripts/cron_pipeline.sh
-0    17   *    *    *    /bin/bash /app/scripts/cron_pipeline.sh
+0     8   *    *    *    /bin/bash /app/scripts/cron_pipeline.sh
